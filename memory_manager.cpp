@@ -73,6 +73,7 @@ void * MemoryManager::bestFitAlloc(size_t chunk_size){
             //if chunk of same size is found, that would be the best fit for the chunk
             //so search can end early
             sameSizeChunkFound = true; 
+            memoryLocationFound = true;
         }else if(it->size > chunk_size  && (!memoryLocationFound || it->size < bestFitMemory->size)){
             bestFitMemory = it;
             memoryLocationFound = true;

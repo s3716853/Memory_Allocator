@@ -34,7 +34,6 @@ class MemoryManager {
         bool worstFit;
         bool firstFit;
 
-
         //TEST METHODS
         void printListSize();
 };
