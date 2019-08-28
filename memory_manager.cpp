@@ -1,23 +1,21 @@
 #include "memory_manager.h"
 
-MemoryManager::MemoryManager(){
-    this->firstFit = true;
-    this->bestFit = false;
-    this->worstFit = false;
-}
-
-MemoryManager::~MemoryManager(){}
+std::list<MemoryChunk> unallocatedMemory;
+std::list<MemoryChunk> allocatedMemory;
+Method allocMethod;
 
 void * MemoryManager::alloc(size_t chunk_size){
     
     void * returnChunk = nullptr;
 
-    if(firstFit){
+    if(allocMethod == FIRST){
         returnChunk = firstFitAlloc(chunk_size);
-    }else if(worstFit){
+    }else if(allocMethod == WORST){
         returnChunk = worstFitAlloc(chunk_size);
-    }else if(bestFit){
+    }else if(allocMethod == BEST){
         returnChunk = bestFitAlloc(chunk_size);
+    }else{
+        std::cout << "NONE OF THE METHODS DONE" << std::endl;
     }
 
     if(returnChunk == nullptr){
@@ -35,9 +33,7 @@ void * MemoryManager::alloc(size_t chunk_size){
 
 void MemoryManager::dealloc(void * chunk){
     
-
     printListSize();
-
 
     std::list<MemoryChunk>::iterator it;
     
@@ -51,11 +47,14 @@ void MemoryManager::dealloc(void * chunk){
         }
     }
 
-    printListSize();
-
     if(!chunkFound){
-        std::cout << "NOT ERASED" << std::endl;
+        abort();
     }
+    printListSize();
+}
+
+void MemoryManager::setMethod(Method method){
+    allocMethod = method;
 }
 
 void * MemoryManager::bestFitAlloc(size_t chunk_size){
@@ -163,23 +162,23 @@ void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t re
     return it->address;
 }
 
-void MemoryManager::setBestFit(){
-    this->bestFit = true;
-    this->worstFit = false;
-    this->firstFit = false;
-}
+// void MemoryManager::setBestFit(){
+//     bestFit = true;
+//     worstFit = false;
+//     firstFit = false;
+// }
 
-void MemoryManager::setWorstFit(){
-    this->bestFit = false;
-    this->worstFit = true;
-    this->firstFit = false;
-}
+// void MemoryManager::setWorstFit(){
+//     bestFit = false;
+//     worstFit = true;
+//     firstFit = false;
+// }
 
-void MemoryManager::setFirstFit(){
-    this->bestFit = false;
-    this->worstFit = false;
-    this->firstFit = true;
-}
+// void MemoryManager::setFirstFit(){
+//     bestFit = false;
+//     worstFit = false;
+//     firstFit = true;
+// }
 
 void MemoryManager::printListSize(){
     std::cout << "SIZE OF ALLOCATEDMEMORY: " << allocatedMemory.size() << std::endl;
@@ -187,6 +186,13 @@ void MemoryManager::printListSize(){
 }
 
 void MemoryManager::reset(){
-    unallocatedMemory.clear();
-    allocatedMemory.clear();
+    // for(unsigned int i = 0; i < unallocatedMemory.size(); ++i){
+    //     delete unallocatedMemory.back().address;
+    //     unallocatedMemory.pop_back();
+    // }
+
+    // for(unsigned int i = 0;  i < allocatedMemory.size(); ++i){
+    //     delete allocatedMemory.back().address;
+    //     allocatedMemory.pop_back();
+    // }
 }

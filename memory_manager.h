@@ -4,36 +4,31 @@
 #include <unistd.h>
  
 #include "memory_chunk.cpp"
+#include "method.cpp"
 
 class MemoryManager {
     public:
-    
-        MemoryManager();
-        ~MemoryManager();
+        static void * alloc(size_t chunk_size);
+        static void dealloc(void * chunk);
 
-        void * alloc(size_t chunk_size);
-        void dealloc(void * chunk);
-
-        void setBestFit();
-        void setWorstFit();
-        void setFirstFit();
-
-        void reset();
-    private:
+        static void setMethod(Method method);
         
-        std::list<MemoryChunk> unallocatedMemory;
-        std::list<MemoryChunk> allocatedMemory;
+        // static void setBestFit();
+        // static void setWorstFit();
+        // static void setFirstFit();
 
-        void * bestFitAlloc(size_t chunk_size);
-        void * worstFitAlloc(size_t chunk_size);
-        void * firstFitAlloc(size_t chunk_size);
+        static void reset();
+    private:
+        // static bool bestFit;
+        // static bool worstFit;
+        // static bool firstFit = true;
 
-        void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
+        static void * bestFitAlloc(size_t chunk_size);
+        static void * worstFitAlloc(size_t chunk_size);
+        static void * firstFitAlloc(size_t chunk_size);
 
-        bool bestFit;
-        bool worstFit;
-        bool firstFit;
+        static void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
 
         //TEST METHODS
-        void printListSize();
+        static void printListSize();
 };
