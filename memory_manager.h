@@ -13,15 +13,9 @@ class MemoryManager {
 
         static void setMethod(Method method);
         
-        // static void setBestFit();
-        // static void setWorstFit();
-        // static void setFirstFit();
-
+        //TEST METHODS
         static void reset();
     private:
-        // static bool bestFit;
-        // static bool worstFit;
-        // static bool firstFit = true;
 
         static void * bestFitAlloc(size_t chunk_size);
         static void * worstFitAlloc(size_t chunk_size);

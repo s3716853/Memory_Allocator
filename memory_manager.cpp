@@ -2,7 +2,7 @@
 
 std::list<MemoryChunk> unallocatedMemory;
 std::list<MemoryChunk> allocatedMemory;
-Method allocMethod;
+Method allocMethod = FIRST;
 
 void * MemoryManager::alloc(size_t chunk_size){
     
@@ -14,8 +14,6 @@ void * MemoryManager::alloc(size_t chunk_size){
         returnChunk = worstFitAlloc(chunk_size);
     }else if(allocMethod == BEST){
         returnChunk = bestFitAlloc(chunk_size);
-    }else{
-        std::cout << "NONE OF THE METHODS DONE" << std::endl;
     }
 
     if(returnChunk == nullptr){
@@ -50,6 +48,7 @@ void MemoryManager::dealloc(void * chunk){
     if(!chunkFound){
         abort();
     }
+    
     printListSize();
 }
 
@@ -162,24 +161,6 @@ void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t re
     return it->address;
 }
 
-// void MemoryManager::setBestFit(){
-//     bestFit = true;
-//     worstFit = false;
-//     firstFit = false;
-// }
-
-// void MemoryManager::setWorstFit(){
-//     bestFit = false;
-//     worstFit = true;
-//     firstFit = false;
-// }
-
-// void MemoryManager::setFirstFit(){
-//     bestFit = false;
-//     worstFit = false;
-//     firstFit = true;
-// }
-
 void MemoryManager::printListSize(){
     std::cout << "SIZE OF ALLOCATEDMEMORY: " << allocatedMemory.size() << std::endl;
     std::cout << "SIZE OF UNALLOCATEDMEMORY: " << unallocatedMemory.size() << std::endl;
@@ -195,4 +176,7 @@ void MemoryManager::reset(){
     //     delete allocatedMemory.back().address;
     //     allocatedMemory.pop_back();
     // }
+
+    unallocatedMemory.clear();
+    allocatedMemory.clear();
 }

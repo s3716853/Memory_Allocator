@@ -29,7 +29,9 @@ int main(int argc, char ** argv){
             "{type} = f/b/w (first/best/worst)" << std::endl;   
         }
     }else{
-        testAll();
+        std::cout << "Specify method" << std::endl <<
+        "{executable} -{type}" << std::endl <<
+        "{type} = f/b/w (first/best/worst)" << std::endl; 
     }
 }
 
