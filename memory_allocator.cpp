@@ -15,13 +15,13 @@ int main(int argc, char ** argv){
     if(argc > 1) {
         std::string arg = argv[1];
         if(arg == "-f"){
-            MemoryManager::setMethod(FIRST);
+            setMethod(FIRST);
             test("FIRST FIT");
         }else if(arg == "-w"){
-            MemoryManager::setMethod(WORST);
+            setMethod(WORST);
             test("WORST FIT");
         }else if (arg == "-b"){
-            MemoryManager::setMethod(BEST);
+            setMethod(BEST);
             test("BEST FIT");
         }else{
             std::cout << "Invalid memory managing type" << std::endl <<
@@ -46,16 +46,16 @@ void test(std::string typeName){
 
 void testAll(){
     std::cout << "----------FIRST FIT----------" << std::endl;
-    MemoryManager::setMethod(FIRST);
+    setMethod(FIRST);
     runAllTests();
 
 
     std::cout << std::endl << std::endl << "----------BEST FIT----------" << std::endl;
-    MemoryManager::setMethod(BEST);
+    setMethod(BEST);
     runAllTests();
 
     std::cout << std::endl << std::endl << "----------WORST FIT----------" << std::endl;
-    MemoryManager::setMethod(WORST);
+    setMethod(WORST);
     runAllTests();
 }
 
@@ -69,30 +69,30 @@ void runAllTests(){
 //tests creating a large memory location, small one, then deleleting both
 //and then making another memory allocation of the size of the small one
 void testMethod1(){
-    MemoryManager::reset();
+    reset();
     std::cout << std::endl << "||TEST METHOD 1||" << std::endl;
-    void * test = MemoryManager::alloc(10);
-    void * test2 = MemoryManager::alloc(sizeof(int));
+    void * test = alloc(10);
+    void * test2 = alloc(sizeof(int));
     std::cout << test << std::endl;
     std::cout << test2 << std::endl;
-    MemoryManager::dealloc(test);
-    MemoryManager::dealloc(test2);
-    char* num = (char*)MemoryManager::alloc(sizeof(int));
+    dealloc(test);
+    dealloc(test2);
+    char* num = (char*)alloc(sizeof(int));
     std::cout << (void*)num << std::endl;
 }
 
 //tests creating a small memory location, large one, then deleleting both
 //and then making another memory allocation of the size of the small one
 void testMethod2(){
-    MemoryManager::reset();
+    reset();
     std::cout << std::endl << "||TEST METHOD 2||" << std::endl;
-    void * test = MemoryManager::alloc(sizeof(int));
-    void * test2 = MemoryManager::alloc(4);
+    void * test = alloc(sizeof(int));
+    void * test2 = alloc(4);
     std::cout << test << std::endl;
     std::cout << test2 << std::endl;
-    MemoryManager::dealloc(test);
-    MemoryManager::dealloc(test2);
-    char* num = (char*)MemoryManager::alloc(sizeof(int));
+    dealloc(test);
+    dealloc(test2);
+    char* num = (char*)alloc(sizeof(int));
     std::cout << (void*)num << std::endl;
 }
 
@@ -100,17 +100,17 @@ void testMethod2(){
 //and then making another memory allocation of the size of the small one
 //then again making another allocation of size (large-small)
 void testMethod3(){
-    MemoryManager::reset();
+    reset();
     std::cout << std::endl << "||TEST METHOD 3||" << std::endl;
-    void * test = MemoryManager::alloc(sizeof(int)*2);
-    void * test2 = MemoryManager::alloc(sizeof(int));
+    void * test = alloc(sizeof(int)*2);
+    void * test2 = alloc(sizeof(int));
     std::cout << test << std::endl;
     std::cout << test2 << std::endl;
-    MemoryManager::dealloc(test);
-    MemoryManager::dealloc(test2);
-    char* num = (char*)MemoryManager::alloc(sizeof(int));
-    char* num2 = (char*)MemoryManager::alloc(sizeof(int));
-    char* num3 = (char*)MemoryManager::alloc(sizeof(int));
+    dealloc(test);
+    dealloc(test2);
+    char* num = (char*)alloc(sizeof(int));
+    char* num2 = (char*)alloc(sizeof(int));
+    char* num3 = (char*)alloc(sizeof(int));
     std::cout << (void*)num << std::endl;
     std::cout << (void*)num2 << std::endl;
     std::cout << (void*)num3 << std::endl;

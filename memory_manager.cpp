@@ -4,7 +4,7 @@ std::list<MemoryChunk> unallocatedMemory;
 std::list<MemoryChunk> allocatedMemory;
 Method allocMethod = FIRST;
 
-void * MemoryManager::alloc(size_t chunk_size){
+void * alloc(size_t chunk_size){
     
     void * returnChunk = nullptr;
 
@@ -29,7 +29,7 @@ void * MemoryManager::alloc(size_t chunk_size){
     return returnChunk;
 }
 
-void MemoryManager::dealloc(void * chunk){
+void dealloc(void * chunk){
     
     printListSize();
 
@@ -52,11 +52,11 @@ void MemoryManager::dealloc(void * chunk){
     printListSize();
 }
 
-void MemoryManager::setMethod(Method method){
+void setMethod(Method method){
     allocMethod = method;
 }
 
-void * MemoryManager::bestFitAlloc(size_t chunk_size){
+void * bestFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
@@ -91,7 +91,7 @@ void * MemoryManager::bestFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::worstFitAlloc(size_t chunk_size){
+void * worstFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
@@ -119,7 +119,7 @@ void * MemoryManager::worstFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::firstFitAlloc(size_t chunk_size){
+void * firstFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
@@ -140,7 +140,7 @@ void * MemoryManager::firstFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
+void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
     std::cout << "!!BIG ONE FOUND!!" << std::endl;
 
     //getting memory address that will become the chunk
@@ -161,12 +161,12 @@ void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t re
     return it->address;
 }
 
-void MemoryManager::printListSize(){
+void printListSize(){
     std::cout << "SIZE OF ALLOCATEDMEMORY: " << allocatedMemory.size() << std::endl;
     std::cout << "SIZE OF UNALLOCATEDMEMORY: " << unallocatedMemory.size() << std::endl;
 }
 
-void MemoryManager::reset(){
+void reset(){
     // for(unsigned int i = 0; i < unallocatedMemory.size(); ++i){
     //     delete unallocatedMemory.back().address;
     //     unallocatedMemory.pop_back();
