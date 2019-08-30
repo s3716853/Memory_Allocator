@@ -140,6 +140,9 @@ void * firstFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
+//Takes iterator from unallocatedMemory to resize and add to allocated memory and add chunk
+//of size (originalChunkSize-ResizeTo) to unnallocated memory
+//Returns the pointer of the memory inside the resized chunk
 void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
     std::cout << "!!BIG ONE FOUND!!" << std::endl;
 

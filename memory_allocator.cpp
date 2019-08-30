@@ -2,16 +2,19 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #include "memory_manager.h"
+#include <fstream>
 
 
 void test(std::string typeName);
-void testAll();
 void runAllTests();
 void testMethod1();
 void testMethod2();
 void testMethod3();
+void testMethod4();
+char** readFile(std::string filepath);
 
 int main(int argc, char ** argv){
+    readFile("experimental_input_01");
     if(argc > 1) {
         std::string arg = argv[1];
         if(arg == "-f"){
@@ -44,26 +47,11 @@ void test(std::string typeName){
     // std::cout << r_usage.ru_maxrss << std::endl;
 }
 
-void testAll(){
-    std::cout << "----------FIRST FIT----------" << std::endl;
-    setMethod(FIRST);
-    runAllTests();
-
-
-    std::cout << std::endl << std::endl << "----------BEST FIT----------" << std::endl;
-    setMethod(BEST);
-    runAllTests();
-
-    std::cout << std::endl << std::endl << "----------WORST FIT----------" << std::endl;
-    setMethod(WORST);
-    runAllTests();
-}
-
 void runAllTests(){
-    testMethod1();
-    testMethod2();
-    testMethod3();
-    //testMethod4(manager);
+    // testMethod1();
+    // testMethod2();
+    // testMethod3();
+    testMethod4();
 }
 
 //tests creating a large memory location, small one, then deleleting both
@@ -114,4 +102,55 @@ void testMethod3(){
     std::cout << (void*)num << std::endl;
     std::cout << (void*)num2 << std::endl;
     std::cout << (void*)num3 << std::endl;
+}
+
+void testMethod4(){
+    std::cout << std::endl << "||TEST METHOD 4||" << std::endl;
+
+    bool inputCont = true;
+    
+    int count = 0;
+    //char[] inputArray[];
+    
+    // while(inputCont){
+    //     char input[100];
+    //     std::cin >> input;
+
+    //     // inputArray[count] = input;
+    //     // ++cout
+    // }
+
+
+    
+
+    // char hello[] = "hello";
+    // char * helloMemPoint = (char*) alloc(sizeof(hello));
+    // helloMemPoint = hello;
+    // for(int i =0; i < 7; ++i){
+    //     std::cout << helloMemPoint[i];
+    // }
+    
+}
+
+char** readFile(std::string filepath){
+    //std::string line = "";
+    std::ifstream myfile(filepath);
+    char stringArray[100][50]; 
+    int wordCount = 0;
+    
+    char arr[105];
+
+    if (myfile.is_open()){
+        while(!myfile.eof()){
+            myfile.getline(stringArray[wordCount],100,'\n');
+            ++wordCount;
+        }   
+        
+    }
+
+    for(int i = 0; i< 50; ++i){
+        std::cout << stringArray[i] << std::endl;
+    }
+
+    return nullptr;
 }
