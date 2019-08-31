@@ -1,6 +1,6 @@
 # OperatingSystemsA1
 HOW TO RUN:
-    {executable} -{method} {test_file_01} {test_file_02}..." 
+    {executable} -{method} {test_file_01} {test_file_02}... 
         
         {method} = f/b/w (first/best/worst)
         
@@ -17,4 +17,6 @@ DESCRIPTION:
     the previous tests.
 
     First file loaded in will always need to create new memory chunks for each string as none would have been 
-    made before. 
+    made before.
+
+    Strings will always be one byte longer than the length of the string to include the \0

@@ -22,6 +22,8 @@ void * alloc(size_t chunk_size){
         chunk.size = chunk_size;
         chunk.address = returnChunk;
         allocatedMemory.push_back(chunk);
+        std::cout << "~~~~~~~~~~Creating new memory " << returnChunk << " of size " << 
+        chunk_size << "~~~~~~~~~~" << std::endl;
     }
 
     printListSize();
@@ -37,7 +39,8 @@ void dealloc(void * chunk){
     
     bool chunkFound = false;;
     for(it = allocatedMemory.begin(); it != allocatedMemory.end() && !chunkFound; ++it){
-        std::cout << "ADDRESS IN LIST " << it->address << " ADDRESS GIVEN" << chunk << std::endl;
+        std::cout << "~~~~~~~~~~Deallocating " << chunk << " of size " << 
+        it->size << "~~~~~~~~~~" << std::endl;
         if(it->address == chunk){
             allocatedMemory.erase(it);
             unallocatedMemory.push_back(*it);
@@ -126,7 +129,8 @@ void * firstFitAlloc(size_t chunk_size){
     bool chunkFound = false;
     for(it = unallocatedMemory.begin(); it != unallocatedMemory.end() && !chunkFound; ++it){
         if(it->size == chunk_size){
-            std::cout << "!!EXACT SIZE FOUND!!" << std::endl;
+            std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
+            " found~~~~~~~~~~" << std::endl;
             returnChunk = it->address;
             allocatedMemory.push_back(*it);
             unallocatedMemory.erase(it);
@@ -144,7 +148,8 @@ void * firstFitAlloc(size_t chunk_size){
 //of size (originalChunkSize-ResizeTo) to unnallocated memory
 //Returns the pointer of the memory inside the resized chunk
 void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
-    std::cout << "!!BIG ONE FOUND!!" << std::endl;
+    std::cout << "~~~~~~~~~~Resizing chunk of size " 
+    << it->size << " to get " << resizeTo << "~~~~~~~~~~" << std::endl;
 
     //getting memory address that will become the chunk
     //that is the remaining memory not given to the user
@@ -165,21 +170,11 @@ void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
 }
 
 void printListSize(){
-    std::cout << "SIZE OF ALLOCATEDMEMORY: " << allocatedMemory.size() << std::endl;
-    std::cout << "SIZE OF UNALLOCATEDMEMORY: " << unallocatedMemory.size() << std::endl;
-}
-
-void reset(){
-    // for(unsigned int i = 0; i < unallocatedMemory.size(); ++i){
-    //     delete unallocatedMemory.back().address;
-    //     unallocatedMemory.pop_back();
-    // }
-
-    // for(unsigned int i = 0;  i < allocatedMemory.size(); ++i){
-    //     delete allocatedMemory.back().address;
-    //     allocatedMemory.pop_back();
-    // }
-
-    unallocatedMemory.clear();
-    allocatedMemory.clear();
+    std::cout << "==========Total chunks created is " <<
+    allocatedMemory.size() + unallocatedMemory.size() <<
+    "==========" << std::endl <<
+    "==========Total chunks allocated is " << allocatedMemory.size() <<
+    "==========" << std::endl <<
+    "==========Total chunks unallocated is " << unallocatedMemory.size() <<
+    "==========" << std::endl;
 }

@@ -1,34 +1,26 @@
 #include <iostream>
 #include <sys/resource.h>
 #include <unistd.h>
-#include "memory_manager.h"
 #include <fstream>
+
+#include "memory_manager.h"
 
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
 #define TEST_FOLDER "tests/"
+#define MAX_STRING_SIZE 100
 
-// void test(std::string typeName);
-// void runAllTests();
-// void testMethod1();
-// void testMethod2();
-// void testMethod3();
-// void testMethod4();
 void readFile(std::string filepath);
 
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
         std::string arg = argv[1];
-        std::string method;
         bool methodSet = true;
         if(arg == "-f"){
             setMethod(FIRST);
-            method = "FIRST FIT";
         }else if(arg == "-w"){
             setMethod(WORST);
-            method = "WORST FIT";
         }else if (arg == "-b"){
             setMethod(BEST);
-            method = "BEST FIT";
         }else{
             std::cout << "Invalid memory managing type" << std::endl <<
             "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
@@ -47,20 +39,23 @@ int main(int argc, char ** argv){
         "{type} = f/b/w (first/best/worst)" << std::endl << 
         "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
     }
+
+    struct rusage r_usage;
+    getrusage(RUSAGE_SELF, &r_usage);
+    std::cout << r_usage.ru_utime << std::endl;
 }
 
 void readFile(std::string filepath){
 
-    std::cout << "!!RUNNING EXPERIMENT FILE " << filepath << "!!" << std::endl;
+    std::cout << "!!Running experiment file " << filepath << "!!" << std::endl << std::endl;
     std::list<char *> pointerList;
     std::ifstream myfile(TEST_FOLDER + filepath);
     
     int wordCount = 0;
     if (myfile.is_open()){
         while(!myfile.eof()){
-            char wordFromFile[100];
-            myfile.getline(wordFromFile,100,'\n');
-            std::cout << wordFromFile <<  std::endl;
+            char wordFromFile[MAX_STRING_SIZE];
+            myfile.getline(wordFromFile,MAX_STRING_SIZE,'\n');
             ++wordCount;
             
             int wordLength = 0;
@@ -79,6 +74,10 @@ void readFile(std::string filepath){
                 ++counter;
             }
 
+            std::cout << std::endl << "<<<<<<<<<<Reading word " << wordFromFile 
+            << " of length " << wordLength << ">>>>>>>>>>" << std::endl
+            << std::endl;
+
             char * word = (char *) alloc(wordLength+1);
             for(int i = 0; i < wordLength; ++i){
                 word[i] = wordFromFile[i];
@@ -87,11 +86,15 @@ void readFile(std::string filepath){
 
             std::cout << word << std::endl;
 
+            
+
             pointerList.push_back(word);
         }
     }
 
     for(char * allocatedMemory: pointerList){
+        std::cout << std::endl << "<<<<<<<<<<Deallocating word " << allocatedMemory 
+        << ">>>>>>>>>>" <<std::endl << std::endl;
         dealloc((void*) allocatedMemory);
     }
 

@@ -19,4 +19,3 @@ void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
 
 //TEST METHODS
 void printListSize();
-void reset();
