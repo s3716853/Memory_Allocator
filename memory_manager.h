@@ -2,7 +2,8 @@
 #include <iostream>
 #include <iterator>
 #include <unistd.h>
- 
+#include <sys/resource.h>
+
 #include "memory_chunk.cpp"
 #include "method.cpp"
 
@@ -16,6 +17,8 @@ void * worstFitAlloc(size_t chunk_size);
 void * firstFitAlloc(size_t chunk_size);
 
 void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
+
+void results();
 
 //Methods to assist my experiments
 void printListSize();

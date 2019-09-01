@@ -1,6 +1,5 @@
 #include <iostream>
-#include <sys/resource.h>
-#include <sys/time.h>
+// #include <sys/resource.h>
 #include <unistd.h>
 #include <fstream>
 
@@ -10,7 +9,7 @@
 #define MAX_STRING_SIZE 100
 
 void readFile(std::string filepath);
-void results();
+//void results();
 
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
@@ -81,7 +80,7 @@ void readFile(std::string filepath){
                 word[i] = wordFromFile[i];
             }
             word[wordLength+1] = '\0';
-            
+
             pointerList.push_back(word);
         }
     }
@@ -94,9 +93,30 @@ void readFile(std::string filepath){
 
 }
 
-void results(){
-    
-}
+// void results(){
+//     rusage r_usage;
+//     getrusage(RUSAGE_SELF, &r_usage);
+//     std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
+//     << "Average chunk size is: " << averageChunkSize() << std::endl;
+
+//     std::cout << r_usage.ru_utime.tv_usec << std::endl 
+//     << r_usage.ru_stime.tv_sec << std::endl 
+//     << r_usage.ru_stime.tv_usec << std::endl
+//     << r_usage.ru_maxrss << std::endl 
+//     << r_usage.ru_ixrss << std::endl
+//     << r_usage.ru_idrss << std::endl 
+//     << r_usage.ru_isrss << std::endl
+//     << r_usage.ru_minflt << std::endl
+//     << r_usage.ru_majflt << std::endl 
+//     << r_usage.ru_nswap << std::endl
+//     << r_usage.ru_inblock << std::endl 
+//     << r_usage.ru_oublock << std::endl
+//     << r_usage.ru_msgsnd << std::endl 
+//     << r_usage.ru_msgrcv << std::endl
+//     << r_usage.ru_nsignals << std::endl
+//     << r_usage.ru_nvcsw << std::endl 
+//     << r_usage.ru_nivcsw << std::endl;
+// }
 
 // void test(std::string typeName){
 //     std::cout << "----------" << typeName << "----------" << std::endl;
