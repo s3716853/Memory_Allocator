@@ -17,5 +17,6 @@ void * firstFitAlloc(size_t chunk_size);
 
 void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
 
-//TEST METHODS
+//Methods to assist my experiments
 void printListSize();
+double averageChunkSize();

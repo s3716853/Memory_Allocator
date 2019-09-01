@@ -1,15 +1,16 @@
 #include <iostream>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <fstream>
 
 #include "memory_manager.h"
 
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
-#define TEST_FOLDER "tests/"
 #define MAX_STRING_SIZE 100
 
 void readFile(std::string filepath);
+void results();
 
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
@@ -32,6 +33,7 @@ int main(int argc, char ** argv){
             for(int i = 2; i < argc; ++i){
                 readFile(argv[i]);
             }
+            results();
         }
     }else{
         std::cout << "Invalid command arguments" << std::endl <<
@@ -39,17 +41,13 @@ int main(int argc, char ** argv){
         "{type} = f/b/w (first/best/worst)" << std::endl << 
         "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
     }
-
-    struct rusage r_usage;
-    getrusage(RUSAGE_SELF, &r_usage);
-    std::cout << r_usage.ru_utime << std::endl;
 }
 
 void readFile(std::string filepath){
 
     std::cout << "!!Running experiment file " << filepath << "!!" << std::endl << std::endl;
     std::list<char *> pointerList;
-    std::ifstream myfile(TEST_FOLDER + filepath);
+    std::ifstream myfile(filepath);
     
     int wordCount = 0;
     if (myfile.is_open()){
@@ -83,11 +81,7 @@ void readFile(std::string filepath){
                 word[i] = wordFromFile[i];
             }
             word[wordLength+1] = '\0';
-
-            std::cout << word << std::endl;
-
             
-
             pointerList.push_back(word);
         }
     }
@@ -98,6 +92,10 @@ void readFile(std::string filepath){
         dealloc((void*) allocatedMemory);
     }
 
+}
+
+void results(){
+    
 }
 
 // void test(std::string typeName){

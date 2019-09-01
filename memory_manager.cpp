@@ -33,7 +33,7 @@ void * alloc(size_t chunk_size){
 
 void dealloc(void * chunk){
     
-    printListSize();
+    //printListSize();
 
     std::list<MemoryChunk>::iterator it;
     
@@ -170,11 +170,29 @@ void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
 }
 
 void printListSize(){
-    std::cout << "==========Total chunks created is " <<
-    allocatedMemory.size() + unallocatedMemory.size() <<
-    "==========" << std::endl <<
-    "==========Total chunks allocated is " << allocatedMemory.size() <<
-    "==========" << std::endl <<
-    "==========Total chunks unallocated is " << unallocatedMemory.size() <<
+
+    std::cout << "==========Total chunks allocated is " << allocatedMemory.size() <<
     "==========" << std::endl;
+    for(MemoryChunk chunk:allocatedMemory){
+        std::cout << "[" << chunk.size << "], ";
+    }
+    std::cout << std::endl << "==========Total chunks unallocated is " << unallocatedMemory.size() <<
+    "==========" << std::endl;
+    for(MemoryChunk chunk:unallocatedMemory){
+        std::cout << "[" << chunk.size << "], ";
+    }
+    
+    std::cout << std::endl << "==========Total chunks created is " <<
+    allocatedMemory.size() + unallocatedMemory.size() <<
+    "==========" << std::endl;
+}
+
+double averageChunkSize(){
+    double length = 0;
+    double total = 0;
+    for(MemoryChunk chunk: unallocatedMemory){
+        ++length;
+        total += chunk.size;
+    }
+    return total/length;
 }

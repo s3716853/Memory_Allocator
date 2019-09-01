@@ -5,9 +5,9 @@ HOW TO RUN:
         {method} = f/b/w (first/best/worst)
         
         {test_file} = files of strings to load into allocator minimum of 1 file but can include many
-                      test files must be in 'test' folder
+                      test files
         
-        Example: ./allocator -f experiment_input_01
+        Example: ./allocator -f tests/experiment_input_01
 
 DESCRIPTION:
     Code will load in any file of strings seperated by line you give it and allocate the memory needed to store
