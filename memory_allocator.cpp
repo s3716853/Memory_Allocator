@@ -7,7 +7,7 @@
 
 #define EXIT_SUCCESS 0
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
-#define MAX_STRING_SIZE 100
+#define MAX_STRING_SIZE 101
 #define FILE_ARGUMENT_START 2
 
 void experiment(int argc, char ** argv, Method method);
