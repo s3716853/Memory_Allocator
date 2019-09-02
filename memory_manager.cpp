@@ -1,4 +1,9 @@
 #include "memory_manager.h"
+void * bestFitAlloc(size_t chunk_size);
+void * worstFitAlloc(size_t chunk_size);
+void * firstFitAlloc(size_t chunk_size);
+void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
+void printListSize();
 
 std::list<MemoryChunk> unallocatedMemory;
 std::list<MemoryChunk> allocatedMemory;
@@ -191,43 +196,14 @@ void printListSize(){
     "==========" << std::endl;
 }
 
-double averageChunkSize(){
-    double length = 0;
-    double total = 0;
-    for(MemoryChunk chunk: unallocatedMemory){
-        ++length;
-        total += chunk.size;
-    }
-    return total/length;
+double memoryChunkAmount(){
+    return unallocatedMemory.size() + allocatedMemory.size();
 }
 
-void results(){
-    rusage r_usage;
-    size_t fullMemoryAllocationSize = 0;
+double totalMemoryAllocatedSize(){
+    double total = 0;
     for(MemoryChunk chunk: unallocatedMemory){
-        fullMemoryAllocationSize += chunk.size;
+        total += chunk.size;
     }
-    getrusage(RUSAGE_SELF, &r_usage);
-    std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
-    << "Average chunk size is: " << averageChunkSize() << std::endl
-    << "Total size of memory allocated by allocator: " << fullMemoryAllocationSize 
-    << " bytes" << std::endl;
-
-    std::cout << r_usage.ru_utime.tv_usec << std::endl 
-    << r_usage.ru_stime.tv_sec << std::endl 
-    << r_usage.ru_stime.tv_usec << std::endl
-    << r_usage.ru_maxrss << std::endl 
-    << r_usage.ru_ixrss << std::endl
-    << r_usage.ru_idrss << std::endl 
-    << r_usage.ru_isrss << std::endl
-    << r_usage.ru_minflt << std::endl
-    << r_usage.ru_majflt << std::endl 
-    << r_usage.ru_nswap << std::endl
-    << r_usage.ru_inblock << std::endl 
-    << r_usage.ru_oublock << std::endl
-    << r_usage.ru_msgsnd << std::endl 
-    << r_usage.ru_msgrcv << std::endl
-    << r_usage.ru_nsignals << std::endl
-    << r_usage.ru_nvcsw << std::endl 
-    << r_usage.ru_nivcsw << std::endl;
+    return total;
 }

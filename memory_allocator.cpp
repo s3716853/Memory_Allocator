@@ -1,5 +1,5 @@
 #include <iostream>
-// #include <sys/resource.h>
+#include <chrono>
 #include <unistd.h>
 #include <fstream>
 
@@ -7,32 +7,26 @@
 
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
 #define MAX_STRING_SIZE 100
+#define FILE_ARGUMENT_START 2
 
+void experiment(int argc, char ** argv, Method method);
 void readFile(std::string filepath);
-//void results();
 
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
         std::string arg = argv[1];
-        bool methodSet = true;
+        //bool methodSet = true;
         if(arg == "-f"){
-            setMethod(FIRST);
+            experiment(argc, argv, FIRST);
         }else if(arg == "-w"){
-            setMethod(WORST);
+            experiment(argc, argv, WORST);
         }else if (arg == "-b"){
-            setMethod(BEST);
+            experiment(argc, argv, BEST);
         }else{
             std::cout << "Invalid memory managing type" << std::endl <<
             "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
             "{type} = f/b/w (first/best/worst)" << std::endl << 
             "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
-            methodSet = false;
-        }
-        if(methodSet){
-            for(int i = 2; i < argc; ++i){
-                readFile(argv[i]);
-            }
-            results();
         }
     }else{
         std::cout << "Invalid command arguments" << std::endl <<
@@ -42,9 +36,32 @@ int main(int argc, char ** argv){
     }
 }
 
+void experiment(int argc, char ** argv, Method method){
+    const char* methods[] = {"FIRST", "WORST", "BEST"};
+    setMethod(method);
+    clock_t cpuTime = clock();
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for(int i = FILE_ARGUMENT_START; i < argc; ++i){
+        std::cout << "!!Running experiment file " << argv[i] << "!!" << std::endl
+        << "!!Method is " << methods[method] << " fit!!"<< std::endl;
+        readFile(argv[i]);
+    }
+
+    cpuTime = clock() - cpuTime;
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
+    << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
+    << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl
+    << "Total size of memory allocated by allocator: " << totalMemoryAllocatedSize() << " bytes" << std::endl 
+    << "Total chunks made: " << memoryChunkAmount() << std::endl
+    << "Average chunk size: " << totalMemoryAllocatedSize()/memoryChunkAmount() << std::endl;
+}
+
 void readFile(std::string filepath){
 
-    std::cout << "!!Running experiment file " << filepath << "!!" << std::endl << std::endl;
     std::list<char *> pointerList;
     std::ifstream myfile(filepath);
     
@@ -92,122 +109,3 @@ void readFile(std::string filepath){
     }
 
 }
-
-// void results(){
-//     rusage r_usage;
-//     getrusage(RUSAGE_SELF, &r_usage);
-//     std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
-//     << "Average chunk size is: " << averageChunkSize() << std::endl;
-
-//     std::cout << r_usage.ru_utime.tv_usec << std::endl 
-//     << r_usage.ru_stime.tv_sec << std::endl 
-//     << r_usage.ru_stime.tv_usec << std::endl
-//     << r_usage.ru_maxrss << std::endl 
-//     << r_usage.ru_ixrss << std::endl
-//     << r_usage.ru_idrss << std::endl 
-//     << r_usage.ru_isrss << std::endl
-//     << r_usage.ru_minflt << std::endl
-//     << r_usage.ru_majflt << std::endl 
-//     << r_usage.ru_nswap << std::endl
-//     << r_usage.ru_inblock << std::endl 
-//     << r_usage.ru_oublock << std::endl
-//     << r_usage.ru_msgsnd << std::endl 
-//     << r_usage.ru_msgrcv << std::endl
-//     << r_usage.ru_nsignals << std::endl
-//     << r_usage.ru_nvcsw << std::endl 
-//     << r_usage.ru_nivcsw << std::endl;
-// }
-
-// void test(std::string typeName){
-//     std::cout << "----------" << typeName << "----------" << std::endl;
-//     runAllTests();
-
-//     // struct rusage r_usage;
-//     // getrusage(RUSAGE_SELF, &r_usage);
-//     // std::cout << r_usage.ru_maxrss << std::endl;
-// }
-
-// void runAllTests(){
-//     // testMethod1();
-//     // testMethod2();
-//     // testMethod3();
-//     testMethod4();
-// }
-
-// //tests creating a large memory location, small one, then deleleting both
-// //and then making another memory allocation of the size of the small one
-// void testMethod1(){
-//     reset();
-//     std::cout << std::endl << "||TEST METHOD 1||" << std::endl;
-//     void * test = alloc(10);
-//     void * test2 = alloc(sizeof(int));
-//     std::cout << test << std::endl;
-//     std::cout << test2 << std::endl;
-//     dealloc(test);
-//     dealloc(test2);
-//     char* num = (char*)alloc(sizeof(int));
-//     std::cout << (void*)num << std::endl;
-// }
-
-// //tests creating a small memory location, large one, then deleleting both
-// //and then making another memory allocation of the size of the small one
-// void testMethod2(){
-//     reset();
-//     std::cout << std::endl << "||TEST METHOD 2||" << std::endl;
-//     void * test = alloc(sizeof(int));
-//     void * test2 = alloc(4);
-//     std::cout << test << std::endl;
-//     std::cout << test2 << std::endl;
-//     dealloc(test);
-//     dealloc(test2);
-//     char* num = (char*)alloc(sizeof(int));
-//     std::cout << (void*)num << std::endl;
-// }
-
-// //tests creating a large memory location, small one, then deleleting both
-// //and then making another memory allocation of the size of the small one
-// //then again making another allocation of size (large-small)
-// void testMethod3(){
-//     reset();
-//     std::cout << std::endl << "||TEST METHOD 3||" << std::endl;
-//     void * test = alloc(sizeof(int)*2);
-//     void * test2 = alloc(sizeof(int));
-//     std::cout << test << std::endl;
-//     std::cout << test2 << std::endl;
-//     dealloc(test);
-//     dealloc(test2);
-//     char* num = (char*)alloc(sizeof(int));
-//     char* num2 = (char*)alloc(sizeof(int));
-//     char* num3 = (char*)alloc(sizeof(int));
-//     std::cout << (void*)num << std::endl;
-//     std::cout << (void*)num2 << std::endl;
-//     std::cout << (void*)num3 << std::endl;
-// }
-
-// void testMethod4(){
-//     //std::cout << std::endl << "||TEST METHOD 4||" << std::endl;
-
-//     bool inputCont = true;
-    
-//     int count = 0;
-//     //char[] inputArray[];
-    
-//     // while(inputCont){
-//     //     char input[100];
-//     //     std::cin >> input;
-
-//     //     // inputArray[count] = input;
-//     //     // ++cout
-//     // }
-
-
-    
-
-//     // char hello[] = "hello";
-//     // char * helloMemPoint = (char*) alloc(sizeof(hello));
-//     // helloMemPoint = hello;
-//     // for(int i =0; i < 7; ++i){
-//     //     std::cout << helloMemPoint[i];
-//     // }
-    
-// }
