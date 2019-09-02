@@ -5,6 +5,7 @@
 
 #include "memory_manager.h"
 
+#define EXIT_SUCCESS 0
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
 #define MAX_STRING_SIZE 100
 #define FILE_ARGUMENT_START 2
@@ -15,7 +16,6 @@ void readFile(std::string filepath);
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
         std::string arg = argv[1];
-        //bool methodSet = true;
         if(arg == "-f"){
             experiment(argc, argv, FIRST);
         }else if(arg == "-w"){
@@ -34,6 +34,8 @@ int main(int argc, char ** argv){
         "{type} = f/b/w (first/best/worst)" << std::endl << 
         "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
     }
+
+    return EXIT_SUCCESS;
 }
 
 void experiment(int argc, char ** argv, Method method){
@@ -52,6 +54,10 @@ void experiment(int argc, char ** argv, Method method){
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
+    /*
+    KNOWN ISSUE WITH CPUTIME:
+    Records with acuracy of 1 second, so tests that are too small will give 0 cpu time
+    */
     std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
     << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
     << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl

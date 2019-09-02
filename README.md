@@ -20,3 +20,5 @@ DESCRIPTION:
     made before.
 
     Strings will always be one byte longer than the length of the string to include the \0
+
+    The pogram inside random_string is what I used to make my experimental data, it has nothing to do with the allocator itself 
