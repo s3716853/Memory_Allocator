@@ -42,7 +42,9 @@ int main(int argc, char ** argv){
             for(int j = 0; j < length; ++j){
                 std::cout << uniform_dist_letters(engine);
             }
-            std::cout << std::endl;
+            if(i+1 != wordAmmount){
+                std::cout << std::endl;
+            }
         }
     }
     return EXIT_SUCCESS;
