@@ -6,7 +6,7 @@ clean:
 	rm -f allocator *.o
 
 string_gen: random_string_gen.o
-	g++ -Wall -Werror -std=c++14 -O -o $@ $^
+	g++ -Wall -Werror -std=c++17 -O -o $@ $^
 
 %.0: %.cpp
-	g++ -Wall -Werror -std=c++14 -O -c $^
+	g++ -Wall -Werror -std=c++17 -O -c $^

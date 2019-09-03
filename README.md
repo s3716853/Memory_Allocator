@@ -7,7 +7,7 @@ HOW TO RUN:
         {test_file} = files of strings to load into allocator minimum of 1 file but can include many
                       test files
         
-        Example: ./allocator -f datasets/EX-same-50-200 datasets/EX-vary-50-200-1
+        Example: ./allocator -f datasets/implementation/implementation_test_01_01 datasets/implementation/implementation_test_01_02
 
 DESCRIPTION:
     Code will load in any file of strings seperated by line you give it and allocate the memory needed to store
@@ -19,8 +19,10 @@ DESCRIPTION:
     First file loaded in will always need to create new memory chunks for each string as none would have been 
     made before.
 
+    The tests in implementation are simple tests to show off the methods actually working
+
     Strings will always be one byte longer than the length of the string to include the \0
 
-    The prgram inside random_string is what I used to make my experimental data, it has nothing to do with the allocator itself
+    The program inside random_string is what I used to make my experimental data, it has nothing to do with the allocator itself
     It prints out strings based on the command line arguments given to it, which I saved as a file using output redirection
     on the command line.

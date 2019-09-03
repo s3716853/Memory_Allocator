@@ -15,7 +15,6 @@
 int main(int argc, char ** argv){
     //will throw error if a command lineargument isnt a number
     //but this is just for my own experiment so its fine
-    //if min is set to zero by user it will break
     if(argc >= MINIMUM_COMMAND_LINE_ARGUMENTS){        
         
         
