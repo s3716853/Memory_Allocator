@@ -1,0 +1,6 @@
+
+memallo
+*.o
+allocator
+.vscode/settings.json
+random_string/string_gen

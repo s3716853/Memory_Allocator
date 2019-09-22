@@ -1,22 +1,24 @@
 #include "memory_manager.h"
 
-MemoryManager::MemoryManager(){
-    this->firstFit = true;
-    this->bestFit = false;
-    this->worstFit = false;
-}
+void * bestFitAlloc(size_t chunk_size);
+void * worstFitAlloc(size_t chunk_size);
+void * firstFitAlloc(size_t chunk_size);
+void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
+void printListSize();
 
-MemoryManager::~MemoryManager(){}
+std::list<MemoryChunk> unallocatedMemory;
+std::list<MemoryChunk> allocatedMemory;
+Method allocMethod = FIRST;
 
-void * MemoryManager::alloc(size_t chunk_size){
+void * alloc(size_t chunk_size){
     
     void * returnChunk = nullptr;
 
-    if(firstFit){
+    if(allocMethod == FIRST){
         returnChunk = firstFitAlloc(chunk_size);
-    }else if(worstFit){
+    }else if(allocMethod == WORST){
         returnChunk = worstFitAlloc(chunk_size);
-    }else if(bestFit){
+    }else if(allocMethod == BEST){
         returnChunk = bestFitAlloc(chunk_size);
     }
 
@@ -26,6 +28,8 @@ void * MemoryManager::alloc(size_t chunk_size){
         chunk.size = chunk_size;
         chunk.address = returnChunk;
         allocatedMemory.push_back(chunk);
+        std::cout << "~~~~~~~~~~Creating new memory " << returnChunk << " of size " << 
+        chunk_size << "~~~~~~~~~~" << std::endl;
     }
 
     printListSize();
@@ -33,17 +37,16 @@ void * MemoryManager::alloc(size_t chunk_size){
     return returnChunk;
 }
 
-void MemoryManager::dealloc(void * chunk){
+void dealloc(void * chunk){
     
-
-    printListSize();
-
+    //printListSize();
 
     std::list<MemoryChunk>::iterator it;
     
     bool chunkFound = false;;
     for(it = allocatedMemory.begin(); it != allocatedMemory.end() && !chunkFound; ++it){
-        std::cout << "ADDRESS IN LIST " << it->address << " ADDRESS GIVEN" << chunk << std::endl;
+        std::cout << "~~~~~~~~~~Deallocating " << chunk << " of size " << 
+        it->size << "~~~~~~~~~~" << std::endl;
         if(it->address == chunk){
             allocatedMemory.erase(it);
             unallocatedMemory.push_back(*it);
@@ -51,14 +54,18 @@ void MemoryManager::dealloc(void * chunk){
         }
     }
 
-    printListSize();
-
     if(!chunkFound){
-        std::cout << "NOT ERASED" << std::endl;
+        abort();
     }
+    
+    printListSize();
 }
 
-void * MemoryManager::bestFitAlloc(size_t chunk_size){
+void setMethod(Method method){
+    allocMethod = method;
+}
+
+void * bestFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
@@ -73,6 +80,7 @@ void * MemoryManager::bestFitAlloc(size_t chunk_size){
             //if chunk of same size is found, that would be the best fit for the chunk
             //so search can end early
             sameSizeChunkFound = true; 
+            memoryLocationFound = true;
         }else if(it->size > chunk_size  && (!memoryLocationFound || it->size < bestFitMemory->size)){
             bestFitMemory = it;
             memoryLocationFound = true;
@@ -81,6 +89,8 @@ void * MemoryManager::bestFitAlloc(size_t chunk_size){
 
     if(memoryLocationFound){
         if(bestFitMemory->size == chunk_size){
+            std::cout << "~~~~~~~~~~Exact chunk of size " << bestFitMemory->size << 
+            " found~~~~~~~~~~" << std::endl;
             returnChunk = bestFitMemory->address;
             allocatedMemory.push_back(*bestFitMemory);
             unallocatedMemory.erase(bestFitMemory);
@@ -92,7 +102,7 @@ void * MemoryManager::bestFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::worstFitAlloc(size_t chunk_size){
+void * worstFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
@@ -109,6 +119,8 @@ void * MemoryManager::worstFitAlloc(size_t chunk_size){
 
     if(memoryLocationFound){
         if(worstFitMemory->size == chunk_size){
+            std::cout << "~~~~~~~~~~Worst chunk of size " << worstFitMemory->size << 
+            " found~~~~~~~~~~" << std::endl;
             returnChunk = worstFitMemory->address;
             allocatedMemory.push_back(*worstFitMemory);
             unallocatedMemory.erase(worstFitMemory);
@@ -120,14 +132,15 @@ void * MemoryManager::worstFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::firstFitAlloc(size_t chunk_size){
+void * firstFitAlloc(size_t chunk_size){
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
     bool chunkFound = false;
     for(it = unallocatedMemory.begin(); it != unallocatedMemory.end() && !chunkFound; ++it){
         if(it->size == chunk_size){
-            std::cout << "!!EXACT SIZE FOUND!!" << std::endl;
+            std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
+            " found~~~~~~~~~~" << std::endl;
             returnChunk = it->address;
             allocatedMemory.push_back(*it);
             unallocatedMemory.erase(it);
@@ -141,8 +154,12 @@ void * MemoryManager::firstFitAlloc(size_t chunk_size){
     return returnChunk;
 }
 
-void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
-    std::cout << "!!BIG ONE FOUND!!" << std::endl;
+//Takes iterator from unallocatedMemory to resize and add to allocated memory and add chunk
+//of size (originalChunkSize-ResizeTo) to unnallocated memory
+//Returns the pointer of the memory inside the resized chunk
+void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
+    std::cout << "~~~~~~~~~~Resizing chunk of size " 
+    << it->size << " to get " << resizeTo << "~~~~~~~~~~" << std::endl;
 
     //getting memory address that will become the chunk
     //that is the remaining memory not given to the user
@@ -162,30 +179,32 @@ void * MemoryManager::resizeChunk(std::list<MemoryChunk>::iterator it, size_t re
     return it->address;
 }
 
-void MemoryManager::setBestFit(){
-    this->bestFit = true;
-    this->worstFit = false;
-    this->firstFit = false;
+void printListSize(){
+
+    std::cout << "==========Total chunks allocated is " << allocatedMemory.size() <<
+    "==========" << std::endl;
+    for(MemoryChunk chunk:allocatedMemory){
+        std::cout << "[" << chunk.size << "], ";
+    }
+    std::cout << std::endl << "==========Total chunks unallocated is " << unallocatedMemory.size() <<
+    "==========" << std::endl;
+    for(MemoryChunk chunk:unallocatedMemory){
+        std::cout << "[" << chunk.size << "], ";
+    }
+    
+    std::cout << std::endl << "==========Total chunks created is " <<
+    allocatedMemory.size() + unallocatedMemory.size() <<
+    "==========" << std::endl;
 }
 
-void MemoryManager::setWorstFit(){
-    this->bestFit = false;
-    this->worstFit = true;
-    this->firstFit = false;
+double memoryChunkAmount(){
+    return unallocatedMemory.size() + allocatedMemory.size();
 }
 
-void MemoryManager::setFirstFit(){
-    this->bestFit = false;
-    this->worstFit = false;
-    this->firstFit = true;
-}
-
-void MemoryManager::printListSize(){
-    std::cout << "SIZE OF ALLOCATEDMEMORY: " << allocatedMemory.size() << std::endl;
-    std::cout << "SIZE OF UNALLOCATEDMEMORY: " << unallocatedMemory.size() << std::endl;
-}
-
-void MemoryManager::reset(){
-    unallocatedMemory.clear();
-    allocatedMemory.clear();
+double totalMemoryAllocatedSize(){
+    double total = 0;
+    for(MemoryChunk chunk: unallocatedMemory){
+        total += chunk.size;
+    }
+    return total;
 }

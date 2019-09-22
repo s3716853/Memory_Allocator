@@ -1,83 +1,117 @@
 #include <iostream>
+#include <chrono>
 #include <unistd.h>
-#include "memory_manager.cpp"
+#include <fstream>
 
-void test(MemoryManager * manager);
-void runAllTests(MemoryManager * manager);
-void testMethod1(MemoryManager * manager);
-void testMethod2(MemoryManager * manager);
-void testMethod3(MemoryManager * manager);
+#include "memory_manager.h"
 
-int main(int argc, char *argv[]){
+#define EXIT_SUCCESS 0
+#define MINIMUM_COMMAND_LINE_ARGUMENTS 2
+#define MAX_STRING_SIZE 101
+#define FILE_ARGUMENT_START 2
+
+void experiment(int argc, char ** argv, Method method);
+void readFile(std::string filepath);
+
+int main(int argc, char ** argv){
+    if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
+        std::string arg = argv[1];
+        if(arg == "-f"){
+            experiment(argc, argv, FIRST);
+        }else if(arg == "-w"){
+            experiment(argc, argv, WORST);
+        }else if (arg == "-b"){
+            experiment(argc, argv, BEST);
+        }else{
+            std::cout << "Invalid memory managing type" << std::endl <<
+            "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
+            "{type} = f/b/w (first/best/worst)" << std::endl << 
+            "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+        }
+    }else{
+        std::cout << "Invalid command arguments" << std::endl <<
+        "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
+        "{type} = f/b/w (first/best/worst)" << std::endl << 
+        "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+void experiment(int argc, char ** argv, Method method){
+    const char* methods[] = {"FIRST", "WORST", "BEST"};
+    setMethod(method);
+    clock_t cpuTime = clock();
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for(int i = FILE_ARGUMENT_START; i < argc; ++i){
+        std::cout << "!!Running experiment file " << argv[i] << "!!" << std::endl
+        << "!!Method is " << methods[method] << " fit!!"<< std::endl;
+        readFile(argv[i]);
+    }
+
+    cpuTime = clock() - cpuTime;
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    /*
+    KNOWN ISSUE WITH CPUTIME:
+    Records with acuracy of 1 second, so tests that are too small will give 0 cpu time
+    */
+    std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
+    << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
+    << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl
+    << "Total size of memory allocated by allocator: " << totalMemoryAllocatedSize() << " bytes" << std::endl 
+    << "Total chunks made: " << memoryChunkAmount() << std::endl
+    << "Average chunk size: " << totalMemoryAllocatedSize()/memoryChunkAmount() << std::endl;
+}
+
+void readFile(std::string filepath){
+
+    std::list<char *> pointerList;
+    std::ifstream myfile(filepath);
     
-    MemoryManager * manager = new MemoryManager();
-    test(manager);
-}
+    int wordCount = 0;
+    if (myfile.is_open()){
+        while(!myfile.eof()){
+            char wordFromFile[MAX_STRING_SIZE];
+            myfile.getline(wordFromFile,MAX_STRING_SIZE,'\n');
+            ++wordCount;
+            
+            int wordLength = 0;
+            int counter = 0;
+            while(wordFromFile[counter] != '\0'){
+                /*
+                this check is to fix an issue that came about
+                due to the fact I was making the test files on
+                windows but running the code on linux, 
+                as windows has 2 new line characters \r & \n
+                so running this on linux would cause issues
+                */
+                if(wordFromFile[counter] != '\r'){
+                    ++wordLength;
+                }
+                ++counter;
+            }
 
-void test(MemoryManager * manager){
-    std::cout << "----------FIRST FIT----------" << std::endl;
-    manager->setFirstFit();
-    runAllTests(manager);
+            std::cout << std::endl << "<<<<<<<<<<Reading word " << wordFromFile 
+            << " of length " << wordLength << ">>>>>>>>>>" << std::endl
+            << std::endl;
 
-    std::cout << std::endl << std::endl << "----------BEST FIT----------" << std::endl;
-    manager->setBestFit();
-    runAllTests(manager);
+            char * word = (char *) alloc(wordLength+1);
+            for(int i = 0; i < wordLength; ++i){
+                word[i] = wordFromFile[i];
+            }
+            word[wordLength+1] = '\0';
 
-    std::cout << std::endl << std::endl << "----------WORST FIT----------" << std::endl;
-    manager->setWorstFit();
-    runAllTests(manager);
-}
+            pointerList.push_back(word);
+        }
+    }
 
-void runAllTests(MemoryManager * manager){
-    testMethod1(manager);
-    testMethod2(manager);
-    testMethod3(manager);
-}
+    for(char * allocatedMemory: pointerList){
+        std::cout << std::endl << "<<<<<<<<<<Deallocating word " << allocatedMemory 
+        << ">>>>>>>>>>" <<std::endl << std::endl;
+        dealloc((void*) allocatedMemory);
+    }
 
-//tests creating a large memory location, small one, then deleleting both
-//and then making another emory allocation of the size of the small one
-void testMethod1(MemoryManager * manager){
-    manager->reset();
-    std::cout << std::endl << "||TEST METHOD 1||" << std::endl;
-    void * test = manager->alloc(10);
-    void * test2 = manager->alloc(sizeof(int));
-    std::cout << test << std::endl;
-    std::cout << test2 << std::endl;
-    manager->dealloc(test);
-    manager->dealloc(test2);
-    char* num = (char*)manager->alloc(sizeof(int));
-    std::cout << (void*)num << std::endl;
-}
-
-//tests creating a small memory location, large one, then deleleting both
-//and then making another emory allocation of the size of the small one
-void testMethod2(MemoryManager * manager){
-    manager->reset();
-    std::cout << std::endl << "||TEST METHOD 2||" << std::endl;
-    void * test = manager->alloc(sizeof(int));
-    void * test2 = manager->alloc(4);
-    std::cout << test << std::endl;
-    std::cout << test2 << std::endl;
-    manager->dealloc(test);
-    manager->dealloc(test2);
-    char* num = (char*)manager->alloc(sizeof(int));
-    std::cout << (void*)num << std::endl;
-}
-
-//tests creating a large memory location, small one, then deleleting both
-//and then making another emory allocation of the size of the small one
-//then again making another allocation of size (large-small)
-void testMethod3(MemoryManager * manager){
-    manager->reset();
-    std::cout << std::endl << "||TEST METHOD 3||" << std::endl;
-    void * test = manager->alloc(10);
-    void * test2 = manager->alloc(sizeof(int));
-    std::cout << test << std::endl;
-    std::cout << test2 << std::endl;
-    manager->dealloc(test);
-    manager->dealloc(test2);
-    char* num = (char*)manager->alloc(sizeof(int));
-    char* num2 = (char*)manager->alloc(sizeof(int));
-    std::cout << (void*)num << std::endl;
-    std::cout << (void*)num2 << std::endl;
 }
