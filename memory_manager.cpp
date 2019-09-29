@@ -3,8 +3,15 @@
 void * bestFitAlloc(size_t chunk_size);
 void * worstFitAlloc(size_t chunk_size);
 void * firstFitAlloc(size_t chunk_size);
+
+pthread_mutex_t unallocatedMemoryReadLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t unallocatedMemoryWriteLock = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_mutex_t allocatedMemoryReadLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t allocatedMemoryWriteLock = PTHREAD_MUTEX_INITIALIZER;
+
 void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
-void printListSize();
+//void printListSize();
 
 std::list<MemoryChunk> unallocatedMemory;
 std::list<MemoryChunk> allocatedMemory;
@@ -27,7 +34,14 @@ void * alloc(size_t chunk_size){
         MemoryChunk chunk;
         chunk.size = chunk_size;
         chunk.address = returnChunk;
+
+
+        pthread_mutex_lock(&allocatedMemoryReadLock);
+        pthread_mutex_lock(&allocatedMemoryWriteLock);
         allocatedMemory.push_back(chunk);
+        pthread_mutex_unlock(&allocatedMemoryReadLock);
+        pthread_mutex_unlock(&allocatedMemoryWriteLock);
+
         std::cout << "~~~~~~~~~~Creating new memory " << returnChunk << " of size " << 
         chunk_size << "~~~~~~~~~~" << std::endl;
     }
@@ -48,13 +62,31 @@ void dealloc(void * chunk){
         std::cout << "~~~~~~~~~~Deallocating " << chunk << " of size " << 
         it->size << "~~~~~~~~~~" << std::endl;
         if(it->address == chunk){
+
+            pthread_mutex_lock(&allocatedMemoryReadLock);
+            pthread_mutex_lock(&allocatedMemoryWriteLock);
+            
             allocatedMemory.erase(it);
+
+            pthread_mutex_unlock(&allocatedMemoryReadLock);
+            pthread_mutex_unlock(&allocatedMemoryWriteLock);
+            
+            pthread_mutex_lock(&unallocatedMemoryReadLock);
+            pthread_mutex_lock(&unallocatedMemoryWriteLock);
+
             unallocatedMemory.push_back(*it);
+
+            pthread_mutex_unlock(&unallocatedMemoryReadLock);
+            pthread_mutex_unlock(&unallocatedMemoryWriteLock);
+
+
+
             chunkFound = true;
         }
     }
 
     if(!chunkFound){
+        std::cout << "chunk not found error :-(" << std::endl;
         abort();
     }
     
@@ -133,6 +165,10 @@ void * worstFitAlloc(size_t chunk_size){
 }
 
 void * firstFitAlloc(size_t chunk_size){
+
+
+    //pthread_mutex_unlock(&allocatedMemoryReadLock);
+    //pthread_mutex_unlock(&allocatedMemoryWriteLock);
 
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;

@@ -4,39 +4,85 @@
 #include <fstream>
 
 #include "memory_manager.h"
+#include "allocate_variables.cpp"
 
 #define EXIT_SUCCESS 0
 #define MINIMUM_COMMAND_LINE_ARGUMENTS 2
 #define MAX_STRING_SIZE 101
 #define FILE_ARGUMENT_START 2
 
+void* allocate(void* variables);
 void experiment(int argc, char ** argv, Method method);
 void readFile(std::string filepath);
 
 int main(int argc, char ** argv){
-    if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
-        std::string arg = argv[1];
-        if(arg == "-f"){
-            experiment(argc, argv, FIRST);
-        }else if(arg == "-w"){
-            experiment(argc, argv, WORST);
-        }else if (arg == "-b"){
-            experiment(argc, argv, BEST);
-        }else{
-            std::cout << "Invalid memory managing type" << std::endl <<
-            "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
-            "{type} = f/b/w (first/best/worst)" << std::endl << 
-            "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
-        }
-    }else{
-        std::cout << "Invalid command arguments" << std::endl <<
-        "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
-        "{type} = f/b/w (first/best/worst)" << std::endl << 
-        "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+    
+    int noThreads = 3;
+
+    pthread_t threads[noThreads];
+
+    void * allocatedMemory[noThreads];
+    for (int i = 0; i < noThreads; i++){
+        allocatedMemory[i] = alloc(sizeof(char));    
     }
+
+    std::cout << "thread continue-001" << std::endl;  
+
+    AllocateVariables allocatedVariables[noThreads];
+    for(int i = 0; i<noThreads; ++i){
+        allocatedVariables[i].id = i;
+        allocatedVariables[i].allocatedMemory = allocatedMemory[i];
+
+        std::cout << allocatedVariables[i].id << std::endl;
+        std::cout << allocatedVariables[i].allocatedMemory << std::endl;
+        pthread_create(&threads[i], NULL, allocate, (void*) &allocatedVariables[i]);
+    }
+
+    std::cout << "thread continue" << std::endl;    
+
+    for(int i = 0; i<noThreads; ++i){
+        pthread_join(threads[i], NULL);
+    }
+
+    std::cout << "THREAD COMPLETE" << std::endl;
+    printListSize();
 
     return EXIT_SUCCESS;
 }
+
+void* allocate(void* variables){
+    AllocateVariables * allocateVariables = (AllocateVariables*) variables;
+    std::cout <<  "PTHREADID " << pthread_self() << std::endl << 
+    "THREAD NO: " << allocateVariables->id << std::endl 
+    << "THREAD MEMORY" << allocateVariables->allocatedMemory << std::endl;
+    dealloc(allocateVariables->allocatedMemory); 
+    pthread_exit(0);
+}
+
+// int main(int argc, char ** argv){
+//     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
+//         std::string arg = argv[1];
+//         if(arg == "-f"){
+//             experiment(argc, argv, FIRST);
+//         }else if(arg == "-w"){
+//             experiment(argc, argv, WORST);
+//         }else if (arg == "-b"){
+//             experiment(argc, argv, BEST);
+//         }else{
+//             std::cout << "Invalid memory managing type" << std::endl <<
+//             "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
+//             "{type} = f/b/w (first/best/worst)" << std::endl << 
+//             "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+//         }
+//     }else{
+//         std::cout << "Invalid command arguments" << std::endl <<
+//         "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
+//         "{type} = f/b/w (first/best/worst)" << std::endl << 
+//         "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+//     }
+
+//     return EXIT_SUCCESS;
+// }
 
 void experiment(int argc, char ** argv, Method method){
     const char* methods[] = {"FIRST", "WORST", "BEST"};
