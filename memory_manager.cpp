@@ -10,10 +10,19 @@ void lowerUnallocatedReaders();
 void addAllocatedReaders();
 void lowerAllocatedReaders();
 
-void unallocatedMemoryWriteLock();
-void unallocatedMemoryWriteUnlock();
-void allocatedMemoryWriteLock();
-void allocatedMemoryWriteUnlock();
+void addUnallocatedWriters();
+void lowerUnallocatedWriters();
+
+void addAllocatedWriters();
+void lowerAllocatedWriters();
+
+void writeLockUnallocatedMemory();
+void writeUnlockUnallocatedMemory();
+void writeLockAllocatedMemory();
+void writeUnlockAllocatedMemory();
+
+void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
+//void printListSize();
 
 pthread_mutex_t unallocatedMemoryReadLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t unallocatedMemoryWriteLock = PTHREAD_MUTEX_INITIALIZER;
@@ -24,8 +33,9 @@ pthread_mutex_t allocatedMemoryWriteLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t unallocatedReadersLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t allocatedReadersLock = PTHREAD_MUTEX_INITIALIZER;
 
-void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo);
-//void printListSize();
+pthread_mutex_t unallocatedWritersLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t allocatedWritersLock = PTHREAD_MUTEX_INITIALIZER;
+
 
 std::list<MemoryChunk> unallocatedMemory;
 std::list<MemoryChunk> allocatedMemory;
@@ -54,7 +64,13 @@ void * alloc(size_t chunk_size){
         chunk.size = chunk_size;
         chunk.address = returnChunk;
 
+        addAllocatedWriters();
+
+        writeLockAllocatedMemory();
         allocatedMemory.push_back(chunk);
+        writeUnlockAllocatedMemory();
+
+        lowerAllocatedWriters();
 
         std::cout << "~~~~~~~~~~Creating new memory " << returnChunk << " of size " << 
         chunk_size << "~~~~~~~~~~" << std::endl;
@@ -69,18 +85,23 @@ void dealloc(void * chunk){
 
     std::list<MemoryChunk>::iterator it;
     
-    bool chunkFound = false;;
+    bool chunkFound = false;
     addAllocatedReaders();
+    while(allocatedWriters > 0);
     for(it = allocatedMemory.begin(); it != allocatedMemory.end() && !chunkFound; ++it){
         std::cout << "~~~~~~~~~~Deallocating " << chunk << " of size " << 
         it->size << "~~~~~~~~~~" << std::endl;
         if(it->address == chunk){
             lowerAllocatedReaders();
-            
+            addAllocatedWriters();
+            writeLockAllocatedMemory();
             allocatedMemory.erase(it);
-            
-            unallocatedMemory.push_back(*it);
+            writeUnlockAllocatedMemory();
 
+            writeLockUnallocatedMemory();
+            unallocatedMemory.push_back(*it);
+            writeUnlockUnallocatedMemory();
+            lowerAllocatedWriters();
             chunkFound = true;
         }
     }
@@ -173,13 +194,10 @@ void * worstFitAlloc(size_t chunk_size){
 
 void * firstFitAlloc(size_t chunk_size){
 
-
-    //pthread_mutex_unlock(&allocatedMemoryReadLock);
-    //pthread_mutex_unlock(&allocatedMemoryWriteLock);
-
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
     bool chunkFound = false;
+    //addUnallocatedReaders();
     for(it = unallocatedMemory.begin(); it != unallocatedMemory.end() && !chunkFound; ++it){
         if(it->size == chunk_size){
             std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
@@ -212,18 +230,23 @@ void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
     MemoryChunk chunk;
     chunk.address = largeChunk;
     chunk.size = it->size - resizeTo;
-    
-    unallocatedMemoryWriteLock()
+
     unallocatedMemory.push_back(chunk);
 
     //Changing size of old chunk and swapping which list its in
     it->size = resizeTo;
-    unallocatedMemory.erase(it);
-    unallocatedMemoryWriteUnlock();
 
-    allocatedMemoryWriteLock();
+    addUnallocatedWriters();
+    writeLockUnallocatedMemory();
+    unallocatedMemory.erase(it);
+    writeUnlockUnallocatedMemory();
+    lowerUnallocatedWriters();
+
+    addAllocatedWriters();
+    writeLockAllocatedMemory();
     allocatedMemory.push_back(*it);
-    allocatedMemoryWriteUnlock();
+    writeUnlockAllocatedMemory();
+    lowerAllocatedWriters();
 
     return it->address;
 }
@@ -281,24 +304,47 @@ void lowerAllocatedReaders(){
     pthread_mutex_unlock(&allocatedReadersLock);
 }
 
-void unallocatedMemoryWriteLock(){
+void addUnallocatedWriters(){
+    pthread_mutex_lock(&unallocatedWritersLock);
+    ++unallocatedWriters;
+    pthread_mutex_unlock(&unallocatedWritersLock);
+}
+
+void lowerUnallocatedWriters(){
+    pthread_mutex_lock(&unallocatedWritersLock);
+    --unallocatedWriters;
+    pthread_mutex_unlock(&unallocatedWritersLock);
+}
+
+void addAllocatedWriters(){
+    pthread_mutex_lock(&allocatedWritersLock);
+    ++allocatedWriters;
+    pthread_mutex_unlock(&allocatedWritersLock);
+}
+void lowerAllocatedWriters(){
+    pthread_mutex_lock(&allocatedWritersLock);
+    --allocatedWriters;
+    pthread_mutex_unlock(&allocatedWritersLock);
+}
+
+void writeLockUnallocatedMemory(){
     pthread_mutex_lock(&unallocatedMemoryReadLock);
     pthread_mutex_lock(&unallocatedMemoryWriteLock);
     while(unallocatedReaders!=0);
 }
 
-void unallocatedMemoryWriteUnlock(){
+void writeUnlockUnallocatedMemory(){
     pthread_mutex_unlock(&unallocatedMemoryReadLock);
     pthread_mutex_unlock(&unallocatedMemoryWriteLock);
 }
 
-void allocatedMemoryWriteLock(){
+void writeLockAllocatedMemory(){
     pthread_mutex_lock(&allocatedMemoryReadLock);
     pthread_mutex_lock(&allocatedMemoryWriteLock);
     while(allocatedReaders!=0);
 }
 
-void allocatedMemoryWriteUnlock(){
+void writeUnlockAllocatedMemory(){
     pthread_mutex_unlock(&allocatedMemoryReadLock);
     pthread_mutex_unlock(&allocatedMemoryWriteLock);
 }
