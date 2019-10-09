@@ -197,19 +197,43 @@ void * firstFitAlloc(size_t chunk_size){
     void * returnChunk = nullptr;
     std::list<MemoryChunk>::iterator it;
     bool chunkFound = false;
-    //addUnallocatedReaders();
+    addUnallocatedReaders();
+    while(unallocatedWriters > 0);
     for(it = unallocatedMemory.begin(); it != unallocatedMemory.end() && !chunkFound; ++it){
         if(it->size == chunk_size){
-            std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
-            " found~~~~~~~~~~" << std::endl;
-            returnChunk = it->address;
-            allocatedMemory.push_back(*it);
-            unallocatedMemory.erase(it);
-            chunkFound = true;
+            if(pthread_mutex_trylock(&(it->memoryChunkLock)) == 0){
+                lowerUnallocatedReaders();
+                std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
+                " found~~~~~~~~~~" << std::endl;
+                returnChunk = it->address;
+
+                addAllocatedWriters();
+                writeLockAllocatedMemory();
+                allocatedMemory.push_back(*it);
+                writeUnlockAllocatedMemory();
+                lowerAllocatedWriters();
+
+                addUnallocatedWriters();
+                writeLockUnallocatedMemory();
+                unallocatedMemory.erase(it);
+                writeUnlockUnallocatedMemory();
+                lowerUnallocatedWriters();
+                
+                chunkFound = true;
+                pthread_mutex_unlock(&(it->memoryChunkLock));               
+            }
         }else if(it->size > chunk_size){
-            returnChunk = resizeChunk(it, chunk_size);
-            chunkFound = true;
+            if(pthread_mutex_trylock(&(it->memoryChunkLock)) == 0){
+                lowerUnallocatedReaders();
+                returnChunk = resizeChunk(it, chunk_size);
+                chunkFound = true;
+                pthread_mutex_unlock(&(it->memoryChunkLock)); 
+            }
         }
+    }
+
+    if(!chunkFound){
+        lowerUnallocatedReaders();
     }
 
     return returnChunk;
