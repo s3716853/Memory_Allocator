@@ -201,12 +201,11 @@ void * firstFitAlloc(size_t chunk_size){
     while(unallocatedWriters > 0);
     for(it = unallocatedMemory.begin(); it != unallocatedMemory.end() && !chunkFound; ++it){
         if(it->size == chunk_size){
-            if(pthread_mutex_trylock(&(it->memoryChunkLock)) == 0){
-                lowerUnallocatedReaders();
+            if(pthread_mutex_trylock(&(it->lock)) == 0){
                 std::cout << "~~~~~~~~~~Exact chunk of size " << it->size << 
                 " found~~~~~~~~~~" << std::endl;
                 returnChunk = it->address;
-
+                lowerUnallocatedReaders();
                 addAllocatedWriters();
                 writeLockAllocatedMemory();
                 allocatedMemory.push_back(*it);
@@ -220,14 +219,14 @@ void * firstFitAlloc(size_t chunk_size){
                 lowerUnallocatedWriters();
                 
                 chunkFound = true;
-                pthread_mutex_unlock(&(it->memoryChunkLock));               
+                pthread_mutex_unlock(&(it->lock));               
             }
         }else if(it->size > chunk_size){
-            if(pthread_mutex_trylock(&(it->memoryChunkLock)) == 0){
+            if(pthread_mutex_trylock(&(it->lock)) == 0){
                 lowerUnallocatedReaders();
                 returnChunk = resizeChunk(it, chunk_size);
                 chunkFound = true;
-                pthread_mutex_unlock(&(it->memoryChunkLock)); 
+                pthread_mutex_unlock(&(it->lock)); 
             }
         }
     }
@@ -255,13 +254,11 @@ void * resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
     chunk.address = largeChunk;
     chunk.size = it->size - resizeTo;
 
-    unallocatedMemory.push_back(chunk);
-
-    //Changing size of old chunk and swapping which list its in
-    it->size = resizeTo;
-
     addUnallocatedWriters();
     writeLockUnallocatedMemory();
+    unallocatedMemory.push_back(chunk);
+    //Changing size of old chunk and swapping which list its in
+    it->size = resizeTo;
     unallocatedMemory.erase(it);
     writeUnlockUnallocatedMemory();
     lowerUnallocatedWriters();
