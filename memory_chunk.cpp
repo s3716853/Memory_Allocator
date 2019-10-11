@@ -1,3 +1,6 @@
+#ifndef mem_chunk
+#define mem_chunk
+
 #include <unistd.h>
 #include <pthread.h>
 struct MemoryChunk {
@@ -5,3 +8,5 @@ struct MemoryChunk {
     void * address;
     size_t size;
 };
+
+#endif
