@@ -23,7 +23,7 @@ class MemoryList {
         //methods found any chunks
         std::list<MemoryChunk>::iterator end();
 
-        void memorySize();
+        std::string memorySize();
     private:
         std::list<MemoryChunk>::iterator findFirst(size_t size);
         std::list<MemoryChunk>::iterator findWorst(size_t size);

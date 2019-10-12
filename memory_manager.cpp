@@ -55,6 +55,6 @@ void setMethod(Method method){
 }
 
 void printListSize(){
-    allocatedMemory.memorySize();
-    unallocatedMemory.memorySize();
+    std::cout << std::endl << allocatedMemory.memorySize()
+    << std::endl << unallocatedMemory.memorySize();
 }

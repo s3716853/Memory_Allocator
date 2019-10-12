@@ -67,14 +67,15 @@ std::list<MemoryChunk>::iterator MemoryList::end(){
     return list.end();
 }
 
-void  MemoryList::memorySize(){
+std::string MemoryList::memorySize(){
     readInitialise();
-    std::cout << std::endl << "==========Total chunks is " << list.size() <<
-    "==========" << std::endl;
+    std::string output = "==========Total chunks is " + std::to_string(list.size()) + "==========\n";
     for(MemoryChunk chunk:list){
-        std::cout << "[" << chunk.size << "], ";
+        output += "[" + std::to_string(chunk.size) + "], ";
     }
     readTerminate();
+
+    return output;
 }
 
 std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
