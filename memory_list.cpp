@@ -2,27 +2,35 @@
 
 
 std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::iterator it){
+    
     return list.erase(it);
+
 }
 
 void MemoryList::push_back(const MemoryChunk chunk){
-    
+    increaseWriters();
+    pthread_mutex_lock(&readersLock);
+    while(readers > 0){
+        pthread_cond_wait(&readersComplete, &readersLock);
+    }
+    pthread_mutex_unlock(&readersLock);
     list.push_back(chunk);
+    decreaseWriters();
 }
 
 std::list<MemoryChunk>::iterator MemoryList::find(void * address){
     
     bool chunkFound = false;
-    std::list<MemoryChunk>::iterator chunk = list.end();
+
     std::list<MemoryChunk>::iterator it;
 
+    std::list<MemoryChunk>::iterator chunk = list.end();
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
         if(it->address == address){
             chunk = it;
             chunkFound = true;
         }
     }
-
 
     return chunk;
 }
@@ -37,6 +45,12 @@ std::list<MemoryChunk>::iterator MemoryList::find(size_t size, Method method){
         chunk = findWorst(size);
     }else if (method == BEST){
         chunk = findBest(size);
+    }
+
+    if(chunk != list.end()){
+        if(chunk->size > size){
+            chunk = resizeChunk(chunk, size);
+        }
     }
 
     return chunk;
@@ -58,8 +72,9 @@ std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
     
     bool chunkFound = false;
     std::list<MemoryChunk>::iterator it;
+    writerWait();
+    increaseReaders();
     std::list<MemoryChunk>::iterator firstFitMemory = list.end();
-
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
         if(it->size >= size){
             //if(pthread_mutex_trylock(&(it->lock)) == 0){
@@ -68,12 +83,7 @@ std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
             //}
         }
     }
-
-    if(chunkFound){
-        if(firstFitMemory->size > size){
-            firstFitMemory = resizeChunk(firstFitMemory, size);
-        }
-    }
+    decreaseReaders();
 
     return firstFitMemory;
 }
@@ -88,12 +98,6 @@ std::list<MemoryChunk>::iterator MemoryList::findWorst(size_t size){
         if(it->size >= size  && (!memoryLocationFound || it->size > worstFitMemory->size)){
             worstFitMemory = it;
             memoryLocationFound = true;
-        }
-    }
-
-    if(memoryLocationFound){
-        if(worstFitMemory->size > size){
-            worstFitMemory = resizeChunk(worstFitMemory, size);
         }
     }
 
@@ -132,13 +136,6 @@ std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
         }
     }
 
-    if(memoryLocationFound){
-        if(bestFitMemory->size > size){
-            bestFitMemory = resizeChunk(bestFitMemory, size);
-        }
-    }
-
-
     return bestFitMemory;
 }
 
@@ -163,4 +160,50 @@ std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>:
     it->size = resizeTo;
 
     return it;
+}
+
+void MemoryList::increaseReaders(){
+    pthread_mutex_lock(&readersLock);
+    ++readers;
+    pthread_mutex_unlock(&readersLock);
+}
+
+void MemoryList::decreaseReaders(){
+    pthread_mutex_lock(&readersLock);
+    --readers;
+    if(readers == 0){
+        pthread_mutex_broadcast(&readersComplete);
+    }
+    pthread_mutex_unlock(&readersLock);
+}
+
+void MemoryList::increaseWriters(){
+    pthread_mutex_lock(&writersLock);
+    ++writers;
+    pthread_mutex_unlock(&writersLock);
+}
+
+void MemoryList::decreaseWriters(){
+    pthread_mutex_lock(&writersLock);
+    --writers;
+    if(writers == 0){
+        pthread_mutex_broadcast(&writersComplete);
+    }
+    pthread_mutex_unlock(&writersLock);
+}
+
+void MemoryList::writerWait(){
+    pthread_mutex_lock(&writersLock);
+    while(writers > 0){
+        pthread_cond_wait(&writersComplete, &writersLock);
+    }
+    pthread_mutex_unlock(&writersLock);
+}
+
+void MemoryList::readersWait(){
+    pthread_mutex_lock(&readersLock);
+    while(readers > 0){
+        pthread_cond_wait(&readersComplete, &readersLock);
+    }
+    pthread_mutex_unlock(&readersLock);
 }
