@@ -35,8 +35,7 @@ class MemoryList {
         unsigned int readers;
         unsigned int writers;
 
-        pthread_mutex_t listReadLock = PTHREAD_MUTEX_INITIALIZER;
-        pthread_mutex_t listWriteLock = PTHREAD_MUTEX_INITIALIZER;
+        pthread_mutex_t listLock = PTHREAD_MUTEX_INITIALIZER;
         
         pthread_mutex_t readersLock = PTHREAD_MUTEX_INITIALIZER;
         pthread_mutex_t writersLock = PTHREAD_MUTEX_INITIALIZER;
@@ -51,5 +50,19 @@ class MemoryList {
         void decreaseWriters();
 
         void writerWait();
-        void readersWait()
+        void readersWait();
+
+        /*
+        together these methods deal with locking/unlocking list locks, 
+        increasing writer count, and waiting for readers to complete 
+        */
+        void writeInitialise();
+        void writeTerminate();
+        
+        /*
+        together these methods deal with checking if writes are ongoing,
+        waiting for write to complete, and increas read count
+        */
+        void readInitialise();
+        void readTerminate();
 };

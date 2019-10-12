@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <fstream>
 
+#include <list> 
+
 #include "memory_manager.h"
 #include "allocate_variables.cpp"
 
