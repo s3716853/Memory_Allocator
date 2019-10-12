@@ -14,8 +14,9 @@ void * alloc(size_t chunk_size){
         std::cout << "~~~~~~~~~~Chunk of size " << memory->size << 
         " found~~~~~~~~~~" << std::endl;
         returnChunk = memory->address;
-        allocatedMemory.push_back(*memory);
         unallocatedMemory.erase(memory);
+        allocatedMemory.push_back(*memory);
+        pthread_mutex_unlock(&(memory->lock));
     }else{
         returnChunk = sbrk(chunk_size);
         MemoryChunk chunk;
@@ -35,14 +36,15 @@ void * alloc(size_t chunk_size){
 
 void dealloc(void * chunk){
 
-    std::list<MemoryChunk>::iterator it = allocatedMemory.find(chunk);
+    std::list<MemoryChunk>::iterator memory = allocatedMemory.find(chunk);
     
-    if(it == allocatedMemory.end()){
+    if(memory == allocatedMemory.end()){
         std::cout << "chunk not found error :-(" << std::endl;
         abort();
     }else{
-        allocatedMemory.erase(it);
-        unallocatedMemory.push_back(*it);
+        allocatedMemory.erase(memory);
+        unallocatedMemory.push_back(*memory);
+        pthread_mutex_unlock(&(memory->lock));
     }
     
     printListSize();
