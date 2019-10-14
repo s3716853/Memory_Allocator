@@ -6,7 +6,6 @@ std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::itera
     std::list<MemoryChunk>::iterator returnIt;
     
     writeInitialise();
-    
     returnIt = list.erase(it);
     writeTerminate();
 

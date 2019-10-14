@@ -14,53 +14,8 @@
 #define MEMORY_INITILISER_LOCATION 2
 #define EXPERIMENT_FILE_START 3
 
-void* allocate(void* variables);
 void experiment(int argc, char ** argv, Method method);
 void * readFile(void * filepath);
-
-// int main(int argc, char ** argv){
-//     setMethod(FIRST);
-//     int noThreads = 3;
-
-//     pthread_t threads[noThreads];
-
-//     void * allocatedMemory[noThreads];
-//     for (int i = 0; i < noThreads; i++){
-//         allocatedMemory[i] = alloc(sizeof(char));    
-//     }
-
-//     std::cout << "thread continue-001" << std::endl;  
-
-//     AllocateVariables allocatedVariables[noThreads];
-//     for(int i = 0; i<noThreads; ++i){
-//         allocatedVariables[i].id = i;
-//         allocatedVariables[i].allocatedMemory = allocatedMemory[i];
-
-//         std::cout << allocatedVariables[i].id << std::endl;
-//         std::cout << allocatedVariables[i].allocatedMemory << std::endl;
-//         pthread_create(&threads[i], NULL, allocate, (void*) &allocatedVariables[i]);
-//     }
-
-//     std::cout << "thread continue" << std::endl;    
-
-//     for(int i = 0; i<noThreads; ++i){
-//         pthread_join(threads[i], NULL);
-//     }
-
-//     std::cout << "THREAD COMPLETE" << std::endl;
-//     printListSize();
-
-//     return EXIT_SUCCESS;
-// }
-
-void* allocate(void* variables){
-    AllocateVariables * allocateVariables = (AllocateVariables*) variables;
-    std::cout <<  "PTHREADID " << pthread_self() << std::endl << 
-    "THREAD NO: " << allocateVariables->id << std::endl 
-    << "THREAD MEMORY" << allocateVariables->allocatedMemory << std::endl;
-    dealloc(allocateVariables->allocatedMemory); 
-    pthread_exit(0);
-}
 
 int main(int argc, char ** argv){
     if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {

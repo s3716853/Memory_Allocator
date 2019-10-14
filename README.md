@@ -17,7 +17,9 @@ DESCRIPTION:
     the previous tests.
 
     First file loaded in will always need to create new memory chunks for each string as none would have been 
-    made before.
+    made before. This makes the first file function as an initiliser for the tests
+
+    test_file_01 is run alone, and then all other test files are run as their own seperate thread concurrently.
 
     The tests in implementation are simple tests to show off the methods actually working
 
