@@ -7,6 +7,7 @@ std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::itera
     
     writeInitialise();
     returnIt = list.erase(it);
+    //std::cout << "ERASE: " << pthread_self() << std::endl;
     writeTerminate();
 
     return returnIt;
@@ -67,6 +68,7 @@ std::list<MemoryChunk>::iterator MemoryList::end(){
 }
 
 std::string MemoryList::memorySize(){
+    
     readInitialise();
     std::string output = "==========Total chunks is " + std::to_string(list.size()) + "==========\n";
     for(MemoryChunk chunk:list){
@@ -78,10 +80,11 @@ std::string MemoryList::memorySize(){
 }
 
 std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
-    
+
     bool chunkFound = false;
     std::list<MemoryChunk>::iterator it;
     std::list<MemoryChunk>::iterator firstFitMemory = list.end();
+    
     readInitialise();
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
         if(it->size >= size){
@@ -131,7 +134,7 @@ std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
                 //if the allocator finds a chunk that fits better,
                 //it needs to give up the old one
                 if(memoryLocationFound){
-                    pthread_mutex_unlock(&(it->lock));
+                    pthread_mutex_unlock(&(bestFitMemory->lock));
                 }
                 bestFitMemory = it;
                 //if chunk of same size is found, that would be the best fit for the chunk
@@ -158,8 +161,8 @@ std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
 //of size (originalChunkSize-ResizeTo) to unnallocated memory
 //Returns the pointer of the memory inside the resized chunk
 std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
-    std::cout << "~~~~~~~~~~Resizing chunk of size " 
-    << it->size << " to get " << resizeTo << "~~~~~~~~~~" << std::endl;
+    // std::cout << "~~~~~~~~~~Resizing chunk of size " 
+    // << it->size << " to get " << resizeTo << "~~~~~~~~~~" << std::endl;
 
     writeInitialise();
 
@@ -185,12 +188,14 @@ std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>:
 void MemoryList::increaseReaders(){
     pthread_mutex_lock(&readersLock);
     ++readers;
+    //std::cout << "READERS:" << readers << std::endl;
     pthread_mutex_unlock(&readersLock);
 }
 
 void MemoryList::decreaseReaders(){
     pthread_mutex_lock(&readersLock);
     --readers;
+    //std::cout << "READERS:" << readers << std::endl;
     if(readers == 0){
         pthread_cond_broadcast(&readersComplete);
     }
@@ -200,12 +205,14 @@ void MemoryList::decreaseReaders(){
 void MemoryList::increaseWriters(){
     pthread_mutex_lock(&writersLock);
     ++writers;
+    //std::cout << "WRITERS:" << writers << std::endl;
     pthread_mutex_unlock(&writersLock);
 }
 
 void MemoryList::decreaseWriters(){
     pthread_mutex_lock(&writersLock);
     --writers;
+    //std::cout << "WRITERS:" << writers << std::endl;
     if(writers == 0){
         pthread_cond_broadcast(&writersComplete);
     }

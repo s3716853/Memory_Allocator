@@ -1,6 +1,7 @@
 #include <list> 
 #include <pthread.h>
 #include <iostream>
+#include <pthread.h>
 
 #include "memory_chunk.cpp"
 #include "method.cpp"
