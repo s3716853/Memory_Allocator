@@ -24,7 +24,6 @@ class MemoryList {
         //methods found any chunks
         std::list<MemoryChunk>::iterator end();
 
-        std::string memorySize();
         void print();
     private:
         std::list<MemoryChunk>::iterator findFirst(size_t size);

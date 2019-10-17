@@ -81,37 +81,15 @@ std::list<MemoryChunk>::iterator MemoryList::end(){
     return list.end();
 }
 
-std::string MemoryList::memorySize(){
-    
-    readInitialise();
-    std::string output = "==========Total chunks is " + std::to_string(list.size()) + "==========\n";
-    // for(MemoryChunk chunk:list){
-    //     //output += "[" + std::to_string(chunk.size) + "], ";
-    //     char * word = (char *) chunk.address;
-    //     //output += "[";
-    //     output += chunk.address;
-    //     //output += "-" + std::to_string(chunk.size) + "], ";
-    // }
-    readTerminate();
-
-    return output;
-}
-
 void MemoryList::print(){
-    for(MemoryChunk chunk: list){
-        std::cout << chunk.address;
-        if(pthread_mutex_trylock(&chunk.lock)){
-            std::cout << " CHUNK WAS NOT LOCKED" << std::endl;
-            pthread_mutex_unlock(&chunk.lock);
-        }else{
-            std::cout << " CHUNK WAS LOCKED" << std::endl;
-            if(pthread_mutex_unlock(&chunk.lock) != 0){
-                std::cout << "UNLOCK FAILED" << std::endl;
-            }else{
-                std::cout << "UNLOCK DONE" << std::endl;
-            }
-        }
+
+    readInitialise();
+    std::cout << "Total chunks is " << std::to_string(list.size()) << std::endl;
+    for(MemoryChunk chunk:list){
+        std::cout << "[" << chunk.size << "], ";
     }
+    std::cout << std::endl;
+    readTerminate();
 }
 
 std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
@@ -196,10 +174,6 @@ std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
 //of size (originalChunkSize-ResizeTo) to unnallocated memory
 //Returns the pointer of the memory inside the resized chunk
 std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
-    // std::cout << "~~~~~~~~~~Resizing chunk of size " 
-    // << it->size << " to get " << resizeTo << "~~~~~~~~~~" << std::endl;
-
-    
 
     //getting memory address that will become the chunk
     //that is the remaining memory not given to the user
@@ -209,10 +183,6 @@ std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>:
     MemoryChunk chunk;
     chunk.address = largeChunk;
     chunk.size = it->size - resizeTo;
-    
-    // writeInitialise();
-    // list.push_back(chunk);
-    // writeTerminate();
 
     push_back(chunk);
     //Changing size of old chunk and swapping which list its in

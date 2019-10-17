@@ -20,5 +20,4 @@ void setMethod(Method method);
 // //Methods to assist my experiments
 // double memoryChunkAmount();
 // double totalMemoryAllocatedSize();
-void printListSize();
-void allocatedMemorySize();
+void printLists();
