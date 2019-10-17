@@ -72,6 +72,7 @@ void experiment(int argc, char ** argv, Method method){
     std::uniform_int_distribution<int> alloc_dist(minAllocAmount, maxAllocAmount);
 
     for(int i = 0; i < noThreads+1; ++i){
+        std::cout << "LOADING DATA FOR THREAD: " << i << std::endl;
         int threadAllocAmount = alloc_dist(engine);
         std::list<int> threadData;
         for(int j = 0; j < threadAllocAmount; ++j){
@@ -111,6 +112,7 @@ void * allocateList(void * thread){
     //std::cout << *threadNo << std::endl;
     std::list<void*> memoryPointers;
     for(int allocAmount: allocList){
+        //std::cout << *threadNo << " : " << allocAmount << std::endl;
         memoryPointers.push_back(alloc(allocAmount));
     }
     for(void* memory: memoryPointers){

@@ -13,7 +13,7 @@ std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::itera
     return returnIt;
 }
 
-void MemoryList::push_back(const MemoryChunk chunk){
+void MemoryList::push_back(MemoryChunk chunk){
 
     writeInitialise();
     list.push_back(chunk);
@@ -29,23 +29,24 @@ std::list<MemoryChunk>::iterator MemoryList::find(void * address){
     std::list<MemoryChunk>::iterator chunk = list.end();
     
     readInitialise();
+    while(!chunkFound){
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
         if(it->address == address){
-            if(pthread_mutex_trylock(&(it->lock)) == 0){
+            int pthread_return = pthread_mutex_trylock(&(it->lock));
+            if(pthread_return == 0){
                 chunk = it;
                 chunkFound = true;
-                //std::cout << "DEALLOC " << address << std::endl;
             }else{
-                
-                //repeatTesting = false;
-            }  
+                if(pthread_return == EBUSY){
+                    std::cout << "ALREADY LOCKED" << std::endl;
+                }else if(pthread_return ==EINVAL){
+                    std::cout << "NOT INITILISED" << std::endl;
+                }
+                //std::cout << "Error: " << pthread_return << std::endl;
+            }
         }
     }
-
-    if(!chunkFound){        
-        std::cout << "THIS SHOULDNT EVER HAPPEN! " << address << std::endl;
     }
-
     readTerminate();
 
     return chunk;
@@ -193,11 +194,10 @@ std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>:
 
 void MemoryList::writeInitialise(){
     pthread_mutex_lock(&userCounter);
-    //std::cout << "WAITING FOR WRITERS" << std::endl;
+    
     while(readers > 0){
         pthread_cond_wait(&readersComplete, &userCounter);
     }
-    //std::cout << "WAITING FOR WRITERS COMPLETE" << std::endl;
 
     ++writers;
     
@@ -210,81 +210,36 @@ void MemoryList::writeTerminate(){
     pthread_mutex_unlock(&listLock);
     
     pthread_mutex_lock(&userCounter);
+    
     --writers;
+    
     if(writers == 0){
         pthread_cond_broadcast(&writersComplete);
     }
+    
     pthread_mutex_unlock(&userCounter);
-
 }
 
 void MemoryList::readInitialise(){
     pthread_mutex_lock(&userCounter);
+    
     while(writers > 0){
         pthread_cond_wait(&writersComplete, &userCounter);
     }
+    
     ++readers;
+    
     pthread_mutex_unlock(&userCounter);
 }
 
 void MemoryList::readTerminate(){
     pthread_mutex_lock(&userCounter);
+    
     --readers;
-    //std::cout << "READERS:" << readers << std::endl;
+    
     if(readers == 0){
         pthread_cond_broadcast(&readersComplete);
     }
+    
     pthread_mutex_unlock(&userCounter);
 }
-
-// void MemoryList::increaseReaders(){
-//     pthread_mutex_lock(&readersLock);
-//     ++readers;
-//     //std::cout << "READERS:" << readers << std::endl;
-//     pthread_mutex_unlock(&readersLock);
-// }
-
-// void MemoryList::decreaseReaders(){
-//     pthread_mutex_lock(&readersLock);
-//     --readers;
-//     //std::cout << "READERS:" << readers << std::endl;
-//     if(readers == 0){
-//         pthread_cond_broadcast(&readersComplete);
-//     }
-//     pthread_mutex_unlock(&readersLock);
-// }
-
-// // void MemoryList::increaseWriters(){
-// //     pthread_mutex_lock(&writersLock);
-// //     ++writers;
-// //     //std::cout << "WRITERS:" << writers << std::endl;
-// //     pthread_mutex_unlock(&writersLock);
-// // }
-
-// // void MemoryList::decreaseWriters(){
-// //     pthread_mutex_lock(&writersLock);
-// //     --writers;
-// //     //std::cout << "WRITERS:" << writers << std::endl;
-// //     if(writers == 0){
-// //         pthread_cond_broadcast(&writersComplete);
-// //     }
-// //     pthread_mutex_unlock(&writersLock);
-// // }
-
-// void MemoryList::writerWait(){
-//     pthread_mutex_lock(&writersLock);
-//     while(writers > 0){
-//         pthread_cond_wait(&writersComplete, &writersLock);
-//     }
-//     pthread_mutex_unlock(&writersLock);
-// }
-
-// // void MemoryList::readersWait(){
-// //     pthread_mutex_lock(&readersLock);
-// //     while(readers > 0){
-// //         pthread_cond_wait(&readersComplete, &readersLock);
-// //     }
-// //     pthread_mutex_unlock(&readersLock);
-// // }
-
-

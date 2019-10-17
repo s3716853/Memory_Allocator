@@ -16,7 +16,7 @@ class MemoryList {
         //returns list.end() if no chunk found
         std::list<MemoryChunk>::iterator find(size_t size, Method method);
 
-        void push_back(const MemoryChunk chunk);
+        void push_back(MemoryChunk chunk);
 
         std::list<MemoryChunk>::iterator erase(std::list<MemoryChunk>::iterator it);
 
