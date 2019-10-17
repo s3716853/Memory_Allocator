@@ -18,8 +18,13 @@ void * alloc(size_t chunk_size){
         // " found~~~~~~~~~~" << std::endl;
         returnChunk = memory->address;
         unallocatedMemory.erase(memory);
+
+        if(pthread_mutex_unlock(&(memory->lock)) != 0){
+            std::cout << "COULD NOT UNLOCK" << std::endl;
+        }
+        
         allocatedMemory.push_back(*memory);
-        pthread_mutex_unlock(&(memory->lock));
+
     }else{
         
         pthread_mutex_lock(&newMemoryLock);
@@ -42,16 +47,23 @@ void * alloc(size_t chunk_size){
 }
 
 void dealloc(void * chunk){
-
+    
     std::list<MemoryChunk>::iterator memory = allocatedMemory.find(chunk);
+    
+    // while(memory == allocatedMemory.end()){
+    //     memory = allocatedMemory.find(chunk);
+    // }
     
     if(memory == allocatedMemory.end()){
         std::cout << "chunk not found error :-(" << std::endl;
-        abort();
+        //abort();
     }else{
         allocatedMemory.erase(memory);
+        //std::cout << memory->address << std::endl;
         unallocatedMemory.push_back(*memory);
+
         pthread_mutex_unlock(&(memory->lock));
+        
     }
     
     //printListSize();
@@ -66,4 +78,8 @@ void setMethod(Method method){
 void printListSize(){
     std::cout << std::endl << allocatedMemory.memorySize()
     << std::endl << unallocatedMemory.memorySize();
+}
+
+void allocatedMemorySize(){
+    allocatedMemory.print();
 }

@@ -25,6 +25,7 @@ class MemoryList {
         std::list<MemoryChunk>::iterator end();
 
         std::string memorySize();
+        void print();
     private:
         std::list<MemoryChunk>::iterator findFirst(size_t size);
         std::list<MemoryChunk>::iterator findWorst(size_t size);
@@ -38,8 +39,11 @@ class MemoryList {
 
         pthread_mutex_t listLock = PTHREAD_MUTEX_INITIALIZER;
         
-        pthread_mutex_t readersLock = PTHREAD_MUTEX_INITIALIZER;
-        pthread_mutex_t writersLock = PTHREAD_MUTEX_INITIALIZER;
+        
+        // pthread_mutex_t readersLock = PTHREAD_MUTEX_INITIALIZER;
+        // pthread_mutex_t writersLock = PTHREAD_MUTEX_INITIALIZER;
+
+        pthread_mutex_t userCounter = PTHREAD_MUTEX_INITIALIZER;
 
         pthread_cond_t readersComplete = PTHREAD_COND_INITIALIZER;
         pthread_cond_t writersComplete = PTHREAD_COND_INITIALIZER;

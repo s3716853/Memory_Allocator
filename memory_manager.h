@@ -21,3 +21,4 @@ void setMethod(Method method);
 // double memoryChunkAmount();
 // double totalMemoryAllocatedSize();
 void printListSize();
+void allocatedMemorySize();

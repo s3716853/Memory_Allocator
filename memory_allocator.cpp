@@ -6,6 +6,7 @@
 #include <string>
 #include <list> 
 #include <vector>
+#include <random>
 
 #include "memory_manager.h"
 #include "allocate_variables.cpp"
@@ -53,89 +54,118 @@ int main(int argc, char ** argv){
     return EXIT_SUCCESS;
 }
 
+
 void experiment(int argc, char ** argv, Method method){
-    const char* methods[] = {"FIRST", "WORST", "BEST"};
-    setMethod(method);
-    clock_t cpuTime = clock();
+    // const char* methods[] = {"FIRST", "WORST", "BEST"};
+    // setMethod(method);
 
-    int noThreads = argc - EXPERIMENT_FILE_START;
-    pthread_t threads[noThreads];
+    // int noThreads = argc - EXPERIMENT_FILE_START;
+    // pthread_t threads[noThreads];
 
-    auto start = std::chrono::high_resolution_clock::now();
+    // std::cout << "!!Initilising Memory With Experiment File " << argv[MEMORY_INITILISER_LOCATION] << "!!" << std::endl
+    // << "!!Method is " << methods[method] << " fit!!"<< std::endl;
 
-    std::cout << "!!Initilising Memory With Experiment File " << argv[MEMORY_INITILISER_LOCATION] << "!!" << std::endl
-    << "!!Method is " << methods[method] << " fit!!"<< std::endl;
+    // auto start = std::chrono::high_resolution_clock::now();
+    // clock_t cpuTime = clock();
 
-    //readFile((void*) argv[MEMORY_INITILISER_LOCATION]);
+    int seed = atoi(argv[2]);
+    int size = 20;
+    std::default_random_engine engine(seed);
+    std::uniform_int_distribution<int> uniform_dist(0, size - 1);
 
-    int threadNo = 0;
-    for(int i = EXPERIMENT_FILE_START; i < argc; ++i){
-        // std::cout << std::endl << "!!Running experiment file " << argv[i] << "!!" << std::endl
-        // << "!!Method is " << methods[method] << " fit!!" << std::endl;
-        // if(pthread_create(&threads[threadNo], NULL, readFile, (void *) argv[i]) == 0){
-        //     ++threadNo;
-        // }else{
-        //     fprintf(stderr, "pthread_create failed with i = %d. errno = %d, %s\n",
-        //         i, errno, std::strerror(errno));
-        // }
-        std::cout << "i = " << i << std::endl;
-        wordList.push_back(readFile((void*) argv[i]));
-        //test((void *) &wordList);
-
-        int * integer= new int(0);
-        pthread_create(&threads[threadNo], NULL, test, (void *) &integer);
-        ++threadNo;
-        // for(std::list<std::string>::iterator i = wordList.begin(); i != wordList.end(); ++i){
-        //     std::cout << *i << " " << std::endl;
-        // }
-
+    for (int i = 0; i < size; i++)
+    {
+        int length = uniform_dist(engine);
+        std::cout << length << std::endl;
     }
 
-    
 
-    // std::cout << "BEFORE JOIN" << std::endl;
 
-    for(int i = 0; i<noThreads; ++i){
-        std::cout << "PLEASE MAKE IT HERE" << std::endl;
-        pthread_join(threads[i], NULL);
-        std::cout << "PLEASE MAKE IT HERE" << std::endl;
-    }
+    // int threadNo = 0; 
+    // for(int i = EXPERIMENT_FILE_START; i < argc; ++i){
+    //     int * number = new int(threadNo+1);
+    //     pthread_create(&threads[threadNo], NULL, test, (void *) number);
+    //     ++threadNo;
+    // }
 
-    // std::cout << "AFTER JOIN" << std::endl;
+    // for(int i = 0; i<noThreads; ++i){
+    //     pthread_join(threads[i], NULL);
+    // }
 
-    cpuTime = clock() - cpuTime;
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    // cpuTime = clock() - cpuTime;
+    // auto stop = std::chrono::high_resolution_clock::now();
+    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-    /*
-    KNOWN ISSUE WITH CPUTIME:
-    Records with acuracy of 1 second, so tests that are too small will give 0 cpu time
-    */
-    std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
-    << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
-    << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl;
-    // << "Total size of memory allocated by allocator: " << totalMemoryAllocatedSize() << " bytes" << std::endl 
-    // << "Total chunks made: " << memoryChunkAmount() << std::endl
-    // << "Average chunk size: " << totalMemoryAllocatedSize()/memoryChunkAmount() << std::endl;
+    // std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
+    // << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
+    // << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl;
+    // allocatedMemorySize(); 
 }
 
+// void experiment(int argc, char ** argv, Method method){
+//     const char* methods[] = {"FIRST", "WORST", "BEST"};
+//     setMethod(method);
+
+//     int noThreads = argc - EXPERIMENT_FILE_START;
+//     pthread_t threads[noThreads];
+
+//     std::cout << "!!Initilising Memory With Experiment File " << argv[MEMORY_INITILISER_LOCATION] << "!!" << std::endl
+//     << "!!Method is " << methods[method] << " fit!!"<< std::endl;
+
+//     //wordList.push_back(readFile((void*) argv[MEMORY_INITILISER_LOCATION]));
+
+//     auto start = std::chrono::high_resolution_clock::now();
+//     clock_t cpuTime = clock();
+    
+//     for(int i = MEMORY_INITILISER_LOCATION; i < argc; ++i){
+//         std::cout << "READING FILE: " << argv[i] << std::endl;
+//         wordList.push_back(readFile((void*) argv[i]));
+//     }
+
+//     int * initiliserLocation = new int(0);
+//     test(initiliserLocation);
+
+//     int threadNo = 0; 
+//     for(int i = EXPERIMENT_FILE_START; i < argc; ++i){
+//         int * number = new int(threadNo+1);
+//         pthread_create(&threads[threadNo], NULL, test, (void *) number);
+//         ++threadNo;
+//         //std::cout << "THREAD NO: " << threadNo << "LOCAL THREAD NO: " << *number << std::endl;
+//     }
+
+//     for(int i = 0; i<noThreads; ++i){
+//         pthread_join(threads[i], NULL);
+//     }
+
+//     cpuTime = clock() - cpuTime;
+//     auto stop = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+//     /*
+//     KNOWN ISSUE WITH CPUTIME:
+//     Records with acuracy of 1 second, so tests that are too small will give 0 cpu time
+//     */
+//     std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
+//     << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
+//     << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl;
+//     allocatedMemorySize(); 
+//     // << "Total size of memory allocated by allocator: " << totalMemoryAllocatedSize() << " bytes" << std::endl 
+//     // << "Total chunks made: " << memoryChunkAmount() << std::endl
+//     // << "Average chunk size: " << totalMemoryAllocatedSize()/memoryChunkAmount() << std::endl;
+// }
+
 std::list<std::string> readFile(void* filename){
+    
     std::list<std::string> list;
     char * filepath = (char *) filename;
     std::list<char *> pointerList;
     std::ifstream myfile(filepath);
     
-    int wordCount = 0;
     if (myfile.is_open()){
         while(!myfile.eof()){
-            //char wordFromFile[MAX_STRING_SIZE];
-
             std::string wordFromFile;
             std::getline(myfile, wordFromFile);
-            ++wordCount;
-            
             list.push_back(wordFromFile);
-            
         }
     }
 
@@ -143,59 +173,44 @@ std::list<std::string> readFile(void* filename){
 }
 
 void * test(void * thread){
-    //std::list<std::string> * wordList = (std::list<std::string> *) wordsPointer;
+    
     int * threadNo = (int *) thread;
+    // std::cout << threadNo << " " << *(threadNo) << std::endl;
+    
     std::vector<void *> allocationPointers;
-    
     std::list<std::list<std::string>>::iterator list = wordList.begin();
-    std::list<std::list<std::string>>::iterator end = wordList.end();
-    
-    std::list<std::string> allocationWordList;
 
-    std::cout << "IT START" << std::endl;
     for(int i = 0; i < *threadNo; ++i){
-        std::cout << i << std::endl;
+        //std::cout << "i = " << i << std::endl;
         ++list;
     }
-    std::cout << "IT STOP" << std::endl;
 
-    allocationWordList = *list;    
+    std::list<std::string> allocationWordList = *list;    
 
-    std::cout << allocationWordList.size() << std::endl;
+    //std::cout << allocationWordList.size() << std::endl;
 
     for(std::string word : allocationWordList){
-        std::cout << "PLEASE FOR THE LOVE OF GOD WORK YOU CUNT" << std::endl;
-        std::cout << word << std::endl;
-        std::cout << "PLEASE FOR THE LOVE OF GOD WORK YOU CUNT 2" << std::endl;  
-    }
-    
-    // while(word != end){
-    //     std::cout << "PLEASE FOR THE LOVE OF GOD WORK YOU CUNT" << std::endl;
-    //     //word = next(word);
-    //     //std::cout << *word << std::endl;
-    //     ++word;
-    //     std::cout << "PLEASE FOR THE LOVE OF GOD WORK YOU CUNT 2" << std::endl;
-    // }
-    // std::cout << "LOOP ESCAPE" << std::endl;
+        //std::cout << word << std::endl;
+        allocationPointers.push_back(allocateWord(word));
+    }    
 
-    // for(std::list<std::string>::iterator word = wordList->begin(); word != wordList->end(); ++word){
-    // //     //std::cout << "READING WORD: " << *word << std::endl;
-    // //     //void * wordPointer = allocateWord(*word);
-    // //     //std::cout << "READ WORD: " << (char*) wordPointer << std::endl;
-    // }
+    for(void * pointer: allocationPointers){
+        //std::cout << "DEALLOC" << std::endl;
+        dealloc(pointer);
+    }    
 
-    //std::cout << "FINISHED WORDS" << std::endl;
-
-    return NULL;
 }
 
 void * allocateWord(std::string word){
+    //std::cout << "LENGTH= " << word.length() << std::endl;
     char * returnAddress = (char*) alloc(word.length()+1);
     for(int i = 0; i < word.length(); ++i){
         returnAddress[i] = word.at(i);
-        std::cout << returnAddress[i] << std::endl;
+        //std::cout << returnAddress[i] << std::endl;
     }
-    returnAddress[word.length()+1] = '\0';
+    returnAddress[word.length()] = '\0';
+
+    //std::cout << (char*) returnAddress << std::endl;
 
     return returnAddress;
 }
