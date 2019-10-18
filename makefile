@@ -8,7 +8,7 @@ debug: memory_manager.o memory_chunk.o memory_allocator.o method.o memory_list.o
 	g++ -g -pthread -std=c++17 -O -o $@ $^
 
 clean:
-	rm -f allocator test debug *.o
+	rm -f allocator debug *.o
 
 %.0: %.cpp
-	g++ -pthread -std=c++17 -O -c $^
+	g++ -std=c++17 -O -c $^

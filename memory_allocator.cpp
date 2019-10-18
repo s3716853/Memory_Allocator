@@ -55,7 +55,7 @@ int main(int argc, char ** argv){
 
 void experiment(int argc, char ** argv, Method method){
     const char* methods[] = {"FIRST", "WORST", "BEST"};
-    setMethod(method);
+    initilise(method);
 
     int seed = atoi(argv[SEED_LOCATION]);
     int noThreads = atoi(argv[THREAD_AMOUNT_LOCATION]);
@@ -72,7 +72,7 @@ void experiment(int argc, char ** argv, Method method){
     std::uniform_int_distribution<int> alloc_dist(minAllocAmount, maxAllocAmount);
 
     for(int i = 0; i < noThreads+1; ++i){
-        std::cout << "LOADING DATA FOR THREAD: " << i << std::endl;
+        //std::cout << "LOADING DATA FOR THREAD: " << i << std::endl;
         int threadAllocAmount = alloc_dist(engine);
         std::list<int> threadData;
         for(int j = 0; j < threadAllocAmount; ++j){
@@ -81,6 +81,17 @@ void experiment(int argc, char ** argv, Method method){
         experimentData.push_back(threadData);
     }
 
+
+    // std::list<void*> memoryPointers;
+    // for(int i = 0; i<10000; ++i){
+    //     //std::cout << *threadNo << " : " << allocAmount << std::endl;
+    //     memoryPointers.push_back(alloc(100));
+    // }
+    // for(void* memory: memoryPointers){
+    //     dealloc(memory);
+    // }
+
+    //initilise memory for the threads to use
     int * thread = new int(0);
     allocateList((void *) thread);
 
@@ -91,7 +102,7 @@ void experiment(int argc, char ** argv, Method method){
         int * thread = new int(i+1);
         pthread_create(&threads[i], NULL, allocateList, (void *) thread);
     }
-    for(int i = 0; i<noThreads; ++i){
+    for(int i = 0; i < noThreads; ++i){
         pthread_join(threads[i], NULL);
     }
 

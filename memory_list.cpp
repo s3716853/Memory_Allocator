@@ -1,6 +1,15 @@
 #include "memory_list.h" 
 
 
+MemoryList::MemoryList(){
+    pthread_mutexattr_t test;
+    pthread_mutexattr_settype(&test, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&listLock, NULL);
+    pthread_mutex_init(&userCounter, NULL);
+    pthread_cond_init(&readersComplete, NULL);
+    pthread_cond_init(&writersComplete, NULL);
+}
+
 std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::iterator it){
     
     std::list<MemoryChunk>::iterator returnIt;
@@ -16,6 +25,12 @@ std::list<MemoryChunk>::iterator MemoryList::erase(std::list<MemoryChunk>::itera
 void MemoryList::push_back(MemoryChunk chunk){
 
     writeInitialise();
+
+    // int test = pthread_mutex_trylock(&(chunk.lock));
+    // std::cout << "PUSHBACK: " << test << std::endl;
+    // int test2 = pthread_mutex_unlock(&(chunk.lock));
+    // std::cout << "PUSHBACK2: " << test << std::endl;
+    
     list.push_back(chunk);
     writeTerminate();
 
@@ -24,28 +39,23 @@ void MemoryList::push_back(MemoryChunk chunk){
 std::list<MemoryChunk>::iterator MemoryList::find(void * address){
     
     bool chunkFound = false;
-
-    std::list<MemoryChunk>::iterator it;
-    std::list<MemoryChunk>::iterator chunk = list.end();
     
+    std::list<MemoryChunk>::iterator it;
+
     readInitialise();
-    while(!chunkFound){
+    std::list<MemoryChunk>::iterator chunk = list.end();
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
         if(it->address == address){
-            int pthread_return = pthread_mutex_trylock(&(it->lock));
-            if(pthread_return == 0){
-                chunk = it;
-                chunkFound = true;
-            }else{
-                if(pthread_return == EBUSY){
-                    std::cout << "ALREADY LOCKED" << std::endl;
-                }else if(pthread_return ==EINVAL){
-                    std::cout << "NOT INITILISED" << std::endl;
-                }
-                //std::cout << "Error: " << pthread_return << std::endl;
-            }
+            // int pthread_return = pthread_mutex_trylock(&(it->lock));
+            // if(pthread_return == 0){
+            //     //std::cout << "LOCK OBTAIN" << std::endl;
+            //     pthread_mutex_unlock(&(it->lock));
+            // }else{
+            //     //std::cout << "WHAT LOCK?" << std::endl;
+            // }
+            chunk = it;
+            chunkFound = true;
         }
-    }
     }
     readTerminate();
 
@@ -74,12 +84,14 @@ std::list<MemoryChunk>::iterator MemoryList::find(size_t size, Method method){
 }
 
 std::list<MemoryChunk>::iterator MemoryList::end(){
+    
     // std::list<MemoryChunk>::iterator listEnd;
     // readInitialise();
     // listEnd = list.end();
     // readTerminate();
-    
+    // return listEnd;
     return list.end();
+
 }
 
 void MemoryList::print(){
@@ -97,17 +109,25 @@ std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
 
     bool chunkFound = false;
     std::list<MemoryChunk>::iterator it;
-    std::list<MemoryChunk>::iterator firstFitMemory = list.end();
-    
+
     readInitialise();
+    std::list<MemoryChunk>::iterator firstFitMemory = list.end();
     for(it = list.begin(); it != list.end() && !chunkFound; ++it){
+        //std::cout << "SEARCHING" << std::endl;
         if(it->size >= size){
-            if(pthread_mutex_trylock(&(it->lock)) == 0){
+           // std::cout << "CHUNK FOUND" << std::endl;
+            int test = pthread_mutex_trylock(&(it->lock));
+            if(test == 0){
+                //std::cout << "CHUNK FOUND UNLOCK" << std::endl;
                 chunkFound = true;
                 firstFitMemory = it;           
+            }   
+            else{
+                //std::cout << test << std::endl;
             }
         }
     }
+
     readTerminate();
 
     return firstFitMemory;
@@ -115,10 +135,10 @@ std::list<MemoryChunk>::iterator MemoryList::findFirst(size_t size){
 std::list<MemoryChunk>::iterator MemoryList::findWorst(size_t size){
     
     std::list<MemoryChunk>::iterator it;
-    std::list<MemoryChunk>::iterator worstFitMemory = list.end();
     bool memoryLocationFound = false;
 
     readInitialise();
+    std::list<MemoryChunk>::iterator worstFitMemory = list.end();
     for(it = list.begin(); it != list.end(); ++it){
         if(it->size >= size  && (!memoryLocationFound || it->size > worstFitMemory->size)){
             if(pthread_mutex_trylock(&(it->lock)) == 0){
@@ -137,11 +157,12 @@ std::list<MemoryChunk>::iterator MemoryList::findWorst(size_t size){
 std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
     
     std::list<MemoryChunk>::iterator it;
-    std::list<MemoryChunk>::iterator bestFitMemory = list.end();
+    
     bool sameSizeChunkFound = false;
     bool memoryLocationFound = false;
 
     readInitialise();
+    std::list<MemoryChunk>::iterator bestFitMemory = list.end();
     for(it = list.begin(); it != list.end() && !sameSizeChunkFound; ++it){
         if(it->size == size){
             if(pthread_mutex_trylock(&(it->lock)) == 0){
@@ -175,15 +196,15 @@ std::list<MemoryChunk>::iterator MemoryList::findBest(size_t size){
 //of size (originalChunkSize-ResizeTo) to unnallocated memory
 //Returns the pointer of the memory inside the resized chunk
 std::list<MemoryChunk>::iterator MemoryList::resizeChunk(std::list<MemoryChunk>::iterator it, size_t resizeTo){
-
+    //std::cout << "RESIZE" << std::endl;
     //getting memory address that will become the chunk
     //that is the remaining memory not given to the user
     void * largeChunk = (void *) ((char*)it->address + resizeTo);
 
     //Making new chunk for remaining space after resize
-    MemoryChunk chunk;
-    chunk.address = largeChunk;
-    chunk.size = it->size - resizeTo;
+    MemoryChunk chunk(largeChunk, it->size - resizeTo);
+    // chunk.address = largeChunk;
+    // chunk.size = it->size - resizeTo;
 
     push_back(chunk);
     //Changing size of old chunk and swapping which list its in
@@ -198,7 +219,7 @@ void MemoryList::writeInitialise(){
     while(readers > 0){
         pthread_cond_wait(&readersComplete, &userCounter);
     }
-
+    std::cout << "WRITE BEGIN" << std::endl;
     ++writers;
     
     pthread_mutex_unlock(&userCounter);
@@ -207,6 +228,7 @@ void MemoryList::writeInitialise(){
 }
 
 void MemoryList::writeTerminate(){
+    std::cout << "WRITE END" << std::endl;
     pthread_mutex_unlock(&listLock);
     
     pthread_mutex_lock(&userCounter);
@@ -214,6 +236,7 @@ void MemoryList::writeTerminate(){
     --writers;
     
     if(writers == 0){
+        //std::cout << "READERS MAY CONTINUE" << std::endl;
         pthread_cond_broadcast(&writersComplete);
     }
     

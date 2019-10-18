@@ -4,9 +4,16 @@
 #include <unistd.h>
 #include <pthread.h>
 struct MemoryChunk {
-    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t lock;
     void * address;
     size_t size;
+
+    MemoryChunk(void* address, size_t size){
+        this->address = address;
+        this->size = size;
+        pthread_mutex_init(&lock, NULL);
+    }
+    
 };
 
 #endif

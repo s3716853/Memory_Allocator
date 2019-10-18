@@ -9,6 +9,8 @@
 class MemoryList {
     public:
 
+        MemoryList();
+
          //finds memory chunk with given address
         std::list<MemoryChunk>::iterator find(void * address);
         
@@ -35,17 +37,11 @@ class MemoryList {
 
         unsigned int readers;
         unsigned int writers;
-
-        pthread_mutex_t listLock = PTHREAD_MUTEX_INITIALIZER;
-        
-        
-        // pthread_mutex_t readersLock = PTHREAD_MUTEX_INITIALIZER;
-        // pthread_mutex_t writersLock = PTHREAD_MUTEX_INITIALIZER;
-
-        pthread_mutex_t userCounter = PTHREAD_MUTEX_INITIALIZER;
-
-        pthread_cond_t readersComplete = PTHREAD_COND_INITIALIZER;
-        pthread_cond_t writersComplete = PTHREAD_COND_INITIALIZER;
+    
+        pthread_mutex_t listLock;
+        pthread_mutex_t userCounter;
+        pthread_cond_t readersComplete;
+        pthread_cond_t writersComplete;
 
         void increaseReaders();
         void decreaseReaders();

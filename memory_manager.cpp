@@ -17,22 +17,28 @@ void * alloc(size_t chunk_size){
         
         MemoryChunk chunk = *memory;
         returnChunk = chunk.address;
-
         unallocatedMemory.erase(memory);
-        
-        allocatedMemory.push_back(chunk);
 
-        pthread_mutex_unlock(&(chunk.lock));
+        if(pthread_mutex_unlock(&chunk.lock) != 0){
+            std::cout << "AINT LOCKED" << std::endl;
+        }
+
+        allocatedMemory.push_back(chunk);        
 
     }else{
         
         pthread_mutex_lock(&newMemoryLock);
+        //std::cout << "ALLOCATING MORE MEMORY" <<std::endl;
         returnChunk = sbrk(chunk_size);
         pthread_mutex_unlock(&newMemoryLock);
 
-        MemoryChunk chunk;
-        chunk.size = chunk_size;
-        chunk.address = returnChunk;
+        MemoryChunk chunk(returnChunk, chunk_size);
+        // int test = pthread_mutex_trylock(&(chunk.lock));
+        // std::cout << "ALLOCATING MORE MEMORY: " << test << std::endl;
+        // int test2 = pthread_mutex_unlock(&(chunk.lock));
+        // std::cout << "UNLOCK: " << test << std::endl;
+        // chunk.size = chunk_size;
+        // chunk.address = returnChunk;
 
         allocatedMemory.push_back(chunk);
     }
@@ -50,10 +56,7 @@ void dealloc(void * chunk){
     }else{
         MemoryChunk chunk = *memory;
         allocatedMemory.erase(memory);
-        
         unallocatedMemory.push_back(chunk);
-
-        pthread_mutex_unlock(&(chunk.lock));
     }
 }
 
@@ -61,6 +64,12 @@ void setMethod(Method method){
     pthread_mutex_lock(&methodLock);
     allocMethod = method;
     pthread_mutex_unlock(&methodLock);
+}
+
+void initilise(Method method){
+    setMethod(method);
+    // pthread_mutex_init(&newMemoryLock, NULL);
+    // pthread_mutex_init(&methodLock, NULL);
 }
 
 void printLists(){

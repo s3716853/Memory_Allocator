@@ -16,6 +16,7 @@
 void * alloc(size_t chunk_size);
 void dealloc(void * chunk);
 void setMethod(Method method);
+void initilise(Method method);
 
 // //Methods to assist my experiments
 // double memoryChunkAmount();
