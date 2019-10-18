@@ -55,7 +55,7 @@ int main(int argc, char ** argv){
 
 void experiment(int argc, char ** argv, Method method){
     const char* methods[] = {"FIRST", "WORST", "BEST"};
-    initilise(method);
+    setMethod(method);
 
     int seed = atoi(argv[SEED_LOCATION]);
     int noThreads = atoi(argv[THREAD_AMOUNT_LOCATION]);
@@ -65,14 +65,12 @@ void experiment(int argc, char ** argv, Method method){
     int maxSize = atoi(argv[MAX_SIZE_LOCATION]);
     
     pthread_t threads[noThreads];
-    //std::list<int> * experimentData[noThreads];
 
     std::default_random_engine engine(seed);
     std::uniform_int_distribution<int> size_dist(minSize, maxSize);
     std::uniform_int_distribution<int> alloc_dist(minAllocAmount, maxAllocAmount);
 
     for(int i = 0; i < noThreads+1; ++i){
-        //std::cout << "LOADING DATA FOR THREAD: " << i << std::endl;
         int threadAllocAmount = alloc_dist(engine);
         std::list<int> threadData;
         for(int j = 0; j < threadAllocAmount; ++j){
@@ -120,10 +118,8 @@ void experiment(int argc, char ** argv, Method method){
 void * allocateList(void * thread){
     int * threadNo = (int*) thread;
     std::list<int> allocList = experimentData[*threadNo];
-    //std::cout << *threadNo << std::endl;
     std::list<void*> memoryPointers;
     for(int allocAmount: allocList){
-        //std::cout << *threadNo << " : " << allocAmount << std::endl;
         memoryPointers.push_back(alloc(allocAmount));
     }
     for(void* memory: memoryPointers){

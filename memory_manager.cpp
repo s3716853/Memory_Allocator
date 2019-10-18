@@ -66,12 +66,6 @@ void setMethod(Method method){
     pthread_mutex_unlock(&methodLock);
 }
 
-void initilise(Method method){
-    setMethod(method);
-    // pthread_mutex_init(&newMemoryLock, NULL);
-    // pthread_mutex_init(&methodLock, NULL);
-}
-
 void printLists(){
     std::cout << "ALLOCATED LIST:"<< std::endl;
     allocatedMemory.print();
