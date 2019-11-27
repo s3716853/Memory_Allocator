@@ -1,12 +1,14 @@
-.default: all
+.default: test
 
-all: allocator
+allocator: memory_manager.o memory_chunk.o memory_allocator.o method.o memory_list.o
+	g++ -pthread -std=c++17 -O -o $@ $^
+
+
+debug: memory_manager.o memory_chunk.o memory_allocator.o method.o memory_list.o
+	g++ -g -pthread -std=c++17 -O -o $@ $^
 
 clean:
-	rm -f allocator *.o
-
-allocator: memory_manager.o memory_chunk.o memory_allocator.o method.o
-	g++ -Wall -Werror -std=c++17 -O -o $@ $^
+	rm -f allocator debug *.o
 
 %.0: %.cpp
-	g++ -Wall -Werror -std=c++17 -O -c $^
+	g++ -std=c++17 -O -c $^

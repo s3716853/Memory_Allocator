@@ -2,20 +2,33 @@
 #include <chrono>
 #include <unistd.h>
 #include <fstream>
+#include <cstring>
+#include <string>
+#include <list> 
+#include <vector>
+#include <random>
 
 #include "memory_manager.h"
+#include "allocate_variables.cpp"
 
+#define METHOD_LOCATION 1
+#define THREAD_AMOUNT_LOCATION 2
+#define MIN_ALLOC_AMOUNT_LOCATION 3
+#define MAX_ALLOC_AMOUNT_LOCATION 4
+#define MIN_SIZE_LOCATION 5
+#define MAX_SIZE_LOCATION 6
+#define SEED_LOCATION 7
+#define MINIMUM_COMMAND_LINE_ARGUMENTS 7
 #define EXIT_SUCCESS 0
-#define MINIMUM_COMMAND_LINE_ARGUMENTS 2
-#define MAX_STRING_SIZE 101
-#define FILE_ARGUMENT_START 2
 
 void experiment(int argc, char ** argv, Method method);
-void readFile(std::string filepath);
+void * allocateList(void * list);
+
+std::vector<std::list<int>> experimentData;
 
 int main(int argc, char ** argv){
-    if(argc > MINIMUM_COMMAND_LINE_ARGUMENTS) {
-        std::string arg = argv[1];
+    if(argc >= MINIMUM_COMMAND_LINE_ARGUMENTS) {
+        std::string arg = argv[METHOD_LOCATION];
         if(arg == "-f"){
             experiment(argc, argv, FIRST);
         }else if(arg == "-w"){
@@ -26,7 +39,8 @@ int main(int argc, char ** argv){
             std::cout << "Invalid memory managing type" << std::endl <<
             "{executable} -{type} {test_file_01} {test_file_02}..." << std::endl <<
             "{type} = f/b/w (first/best/worst)" << std::endl << 
-            "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" << std::endl;
+            "{test_file} = files of strings to load into allocator minimum of 1 file but can include many" <<
+            "Each Test file is run as its own process after the first" << std::endl;
         }
     }else{
         std::cout << "Invalid command arguments" << std::endl <<
@@ -38,80 +52,77 @@ int main(int argc, char ** argv){
     return EXIT_SUCCESS;
 }
 
+
 void experiment(int argc, char ** argv, Method method){
     const char* methods[] = {"FIRST", "WORST", "BEST"};
     setMethod(method);
-    clock_t cpuTime = clock();
-    auto start = std::chrono::high_resolution_clock::now();
 
-    for(int i = FILE_ARGUMENT_START; i < argc; ++i){
-        std::cout << "!!Running experiment file " << argv[i] << "!!" << std::endl
-        << "!!Method is " << methods[method] << " fit!!"<< std::endl;
-        readFile(argv[i]);
+    int seed = atoi(argv[SEED_LOCATION]);
+    int noThreads = atoi(argv[THREAD_AMOUNT_LOCATION]);
+    int minAllocAmount = atoi(argv[MIN_ALLOC_AMOUNT_LOCATION]);
+    int maxAllocAmount = atoi(argv[MAX_ALLOC_AMOUNT_LOCATION]);
+    int minSize = atoi(argv[MIN_SIZE_LOCATION]);
+    int maxSize = atoi(argv[MAX_SIZE_LOCATION]);
+    
+    pthread_t threads[noThreads];
+
+    std::default_random_engine engine(seed);
+    std::uniform_int_distribution<int> size_dist(minSize, maxSize);
+    std::uniform_int_distribution<int> alloc_dist(minAllocAmount, maxAllocAmount);
+
+    for(int i = 0; i < noThreads+1; ++i){
+        int threadAllocAmount = alloc_dist(engine);
+        std::list<int> threadData;
+        for(int j = 0; j < threadAllocAmount; ++j){
+            threadData.push_back(size_dist(engine));
+        }
+        experimentData.push_back(threadData);
+    }
+
+
+    // std::list<void*> memoryPointers;
+    // for(int i = 0; i<10000; ++i){
+    //     //std::cout << *threadNo << " : " << allocAmount << std::endl;
+    //     memoryPointers.push_back(alloc(100));
+    // }
+    // for(void* memory: memoryPointers){
+    //     dealloc(memory);
+    // }
+
+    //initilise memory for the threads to use
+    int * thread = new int(0);
+    allocateList((void *) thread);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    clock_t cpuTime = clock();
+
+    for(int i = 0; i < noThreads; ++i){
+        int * thread = new int(i+1);
+        pthread_create(&threads[i], NULL, allocateList, (void *) thread);
+    }
+    for(int i = 0; i < noThreads; ++i){
+        pthread_join(threads[i], NULL);
     }
 
     cpuTime = clock() - cpuTime;
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-    /*
-    KNOWN ISSUE WITH CPUTIME:
-    Records with acuracy of 1 second, so tests that are too small will give 0 cpu time
-    */
     std::cout << std::endl << "----------TEST RESULTS----------" << std::endl 
     << "Experiment ran for: " << duration.count() << " microseconds" << std::endl 
-    << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl
-    << "Total size of memory allocated by allocator: " << totalMemoryAllocatedSize() << " bytes" << std::endl 
-    << "Total chunks made: " << memoryChunkAmount() << std::endl
-    << "Average chunk size: " << totalMemoryAllocatedSize()/memoryChunkAmount() << std::endl;
+    << "CPU time: " << ((float)cpuTime / CLOCKS_PER_SEC) * 1000000 << " microseconds" << std::endl;
+    
+    printLists();
 }
 
-void readFile(std::string filepath){
-
-    std::list<char *> pointerList;
-    std::ifstream myfile(filepath);
-    
-    int wordCount = 0;
-    if (myfile.is_open()){
-        while(!myfile.eof()){
-            char wordFromFile[MAX_STRING_SIZE];
-            myfile.getline(wordFromFile,MAX_STRING_SIZE,'\n');
-            ++wordCount;
-            
-            int wordLength = 0;
-            int counter = 0;
-            while(wordFromFile[counter] != '\0'){
-                /*
-                this check is to fix an issue that came about
-                due to the fact I was making the test files on
-                windows but running the code on linux, 
-                as windows has 2 new line characters \r & \n
-                so running this on linux would cause issues
-                */
-                if(wordFromFile[counter] != '\r'){
-                    ++wordLength;
-                }
-                ++counter;
-            }
-
-            std::cout << std::endl << "<<<<<<<<<<Reading word " << wordFromFile 
-            << " of length " << wordLength << ">>>>>>>>>>" << std::endl
-            << std::endl;
-
-            char * word = (char *) alloc(wordLength+1);
-            for(int i = 0; i < wordLength; ++i){
-                word[i] = wordFromFile[i];
-            }
-            word[wordLength+1] = '\0';
-
-            pointerList.push_back(word);
-        }
+void * allocateList(void * thread){
+    int * threadNo = (int*) thread;
+    std::list<int> allocList = experimentData[*threadNo];
+    std::list<void*> memoryPointers;
+    for(int allocAmount: allocList){
+        memoryPointers.push_back(alloc(allocAmount));
     }
-
-    for(char * allocatedMemory: pointerList){
-        std::cout << std::endl << "<<<<<<<<<<Deallocating word " << allocatedMemory 
-        << ">>>>>>>>>>" <<std::endl << std::endl;
-        dealloc((void*) allocatedMemory);
+    for(void* memory: memoryPointers){
+        dealloc(memory);
     }
-
 }
