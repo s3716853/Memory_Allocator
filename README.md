@@ -1,4 +1,11 @@
 # OperatingSystemsA1
+DESCRIPTION:
+    Implementation of a C++ memory allocator and code for testing it in a multithreaded environment.
+    
+    Code creates pseudo random list of integers, passing one of these lists to each thread to allocate
+
+    Allocator is first filled with an initiliser, which fills memory based on the same input as the tests before tests are run
+
 HOW TO RUN:
     {executable} -{method} {thread_amount} {minimum_allocation} {maximum_allocation} {minimum_allocation_size} {maximum_allocation_size} {seed}
         
@@ -14,7 +21,3 @@ HOW TO RUN:
 
         Example: ./allocator -f 4 50 200 1 20 5
 
-DESCRIPTION:
-    Code creates pseudo random list of integers, passing one of these lists to each thread to allocate
-
-    Allocator is first filled with an initiliser, which fills memory based on the same input as the tests before tests are run
